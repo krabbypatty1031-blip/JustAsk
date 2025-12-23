@@ -1,0 +1,104 @@
+name: Generate test report via Gemini CLI and deploy to GitHub Pages
+
+on:
+  push:
+    tags: [ '**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      COPILOT_ALLOW_ALL: "true"
+      NODE_ENV: development
+      COPILOT_MODEL: gpt-5
+      MONGODB_URI: mongodb://127.0.0.1:27017/comp3047
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_SETTINGS: '{"selectedAuthType": "gemini-api-key", "preferredEditor": "nano", "checkpointing": {"enabled": true}, "defaultModel": "gemini-2.5-flash", "mcpServers": {"context7": {"command": "npx", "args": ["-y", "@upstash/context7-mcp"]}, "image-placeholder": {"command": "npx", "args": ["-y", "mcp-image-placeholder"]}}}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+
+      - name: Setup uv/uvx (Python runner) — use context7
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: '3.12'
+
+      - name: Verify uvx installed
+        run: |
+          uv --version
+          uvx --version
+
+      - name: Install deps
+        run: |
+          npm install
+          npm install -D @playwright/test@latest
+          npm init playwright@latest
+          npx playwright install --with-deps
+
+      - name: Wait for MongoDB (Context7 inspired health pattern using ping)
+        run: |
+          for i in {1..30}; do
+            if mongosh "$MONGODB_URI" --quiet --eval 'db.runCommand({ping:1}).ok' 2>/dev/null | grep -q 1; then
+              echo "MongoDB is up"; break; fi; sleep 2; done
+          node -e "require('mongodb').MongoClient.connect(process.env.MONGODB_URI).then(()=>{console.log('Driver connection OK');process.exit(0)}).catch(e=>{console.error(e);process.exit(1)})"
+        shell: bash
+
+      - name: Setup git author information
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "<>"
+
+      - name: Setup Gemini CLI settings
+        run: |
+          mkdir -p ~/.gemini
+          echo "$GEMINI_SETTINGS" > ~/.gemini/settings.json
+          mkdir -p report/screenshots
+
+      - name: Generate e2e test scripts via Gemini CLI using JavasScript and Playwright
+        uses: google-github-actions/run-gemini-cli@v0
+        with:
+          gemini_debug: false
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          gemini_model: gemini-2.5-flash
+          settings: ${{ secrets.GEMINI_SETTINGS }}
+          prompt: >-
+            Use ESLint to lint the project and generated test script. Using context7 to generate an end-to-end test script in JavaScript using Playwright for this online book library web app project. The app should built with Express.js and MongoDB without using Mongoose library. If it built using Mongoose, treat it as warning and proceed. The connection string for MongoDB is in env var MONGODB_URI. The app has routes / (homepage), /books (list all books), /book/add (form to add a new book), /book/:id (view book details), /book/:id/edit (form to edit book). The test script should cover these requirements: 1) Verify homepage has carousel and sections 'Latest Books', 'Trending Books', 'Hot Books'. 2) Verify /books page lists books with at 6 book cards per page and pagination functionality at the bottom of the page. 3) Verify /book/add form has inputs for title, author, isbn, publisher, year, category, location, coverImage, description, isHighlighted checkbox. 4) Create a new book record via the add form, the coverImage should use URL from image-placeholder MCP and verify it appears in the list and MongoDB. 5) View a book's detail page and verify fields Author, ISBN, Category, Location are visible. 6) Edit a book record and verify the changes persist. 7) Verify navbar links to Home and Books pages. 8) Verify mobile responsive layout with navbar toggler visible on small screen. Use context7. You need to seed the database with sample book records first by inspecting the project source to infer the books collection schema (fields: title, description, coverImage, author, isbn, publisher, year, category, location, isHighlighted, createdAt, updatedAt) and inserting 8 meaningful records featuring varied categories (Science, Technology, Arts, Literature, History, Mathematics, Engineering, Philosophy) and realistic author, publisher, isbn, year values spanning 1998-2024. Distribute isHighlighted true for first 3. Ensure createdAt/updatedAt are ISO timestamps with descending createdAt order. The test script should include setup and teardown steps to start and stop the Express server. For each input field, you should inspect the HTML to determine appropriate selectors (IDs, classes, or element types) and verify their presence. Log any incorrect or missing elements clearly. When creating and editing book records, use realistic test data. After creating or editing a book, verify the changes by checking the relevant page content or using the MongoDB shell to query the database. Use selectors based on class names or element types. Test mobile view and desktop view for all pages as well. Save the script as e2e-test.js. Capture screenshots at key steps and save them as PNG files with sequence number and meaningful filename in report/screenshots/. Take a look to each PNG image saved and verify the corresponding step passed or failed. Ensure the script is robust and can run multiple times without manual intervention. Use context7. Finally, summarize the verification status for requirements 1-8 referencing the captured screenshots and include full logs of the test run in a report of markdown file in report/README.md. The image in report/README.md should reference with relative path, so that it could directly deploy as a static web on Github Pages. Include eslint output in the report as well. Finally, convert report/README.md to report/index.html . Use context7.
+
+      - name: Move any Gemini CLI debug log from /tmp to report directory if exists
+        run: >-
+          ls -1 /tmp/gemini-*.json 2>/dev/null | xargs -I {} mv {} report/ 2>/dev/null || echo "No Gemini debug log found"
+
+      - name: Upload logs and report as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: >-
+            report/
+  deploy:
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
