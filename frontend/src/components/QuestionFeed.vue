@@ -1,54 +1,33 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
-// 状态管理
 const questions = ref([])
 const isLoading = ref(true)
-const isError = ref(false)
-const isNavigating = ref(false) // 用于防止重复点击跳转
+const showToast = inject('showToast')
 
-// 获取数据函数
 const fetchQuestions = async () => {
   isLoading.value = true
-  isError.value = false
-  
   try {
-    // 模拟网络延迟，让骨架屏展示一会儿，避免闪烁
-    // 实际生产中可以去掉 setTimeout
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
+    // 稍微延遲以展示骨架屏動畫
+    await new Promise(resolve => setTimeout(resolve, 600))
     const response = await axios.get('/questions')
     if (response.data.success) {
       questions.value = response.data.questions
-    } else {
-      throw new Error('数据格式错误')
     }
   } catch (error) {
-    console.error('获取问题列表失败:', error)
-    isError.value = true
+    showToast('無法獲取列表，請重試', 'error')
   } finally {
     isLoading.value = false
   }
 }
 
-// 导航处理（带防抖）
 const handleNavigate = (id) => {
-  if (isNavigating.value) return
-  
-  isNavigating.value = true
-  // 稍微延迟跳转，给用户点击反馈
-  setTimeout(() => {
-    router.push(`/question/${id}`)
-    // 注意：这里不需要重置 isNavigating，因为页面会跳转销毁
-    // 如果是单页应用保留组件，可以在 onActivated 钩子中重置
-  }, 200)
+  router.push(`/question/${id}`)
 }
 
-// 初始化
 onMounted(() => {
   fetchQuestions()
 })
@@ -57,215 +36,204 @@ onMounted(() => {
 <template>
   <div class="feed-container">
     
-    <!-- 1. 错误状态 (Error State) -->
-    <div v-if="isError" class="status-box error-box" role="alert">
-      <p class="status-text">网络好像有点慢，没加载出来。</p>
-      <button @click="fetchQuestions" class="btn-retry">
-        点这里再试一次
-      </button>
-    </div>
-
-    <!-- 2. 加载状态 (Skeleton Loading) -->
-    <div v-else-if="isLoading" class="skeleton-list" aria-busy="true" aria-label="正在加载内容">
-      <div v-for="n in 3" :key="n" class="card skeleton-card">
-        <div class="skeleton-title"></div>
-        <div class="skeleton-text"></div>
-        <div class="skeleton-text short"></div>
-        <div class="skeleton-btn"></div>
+    <!-- Loading Skeleton -->
+    <div v-if="isLoading" class="skeleton-list">
+      <div v-for="n in 3" :key="n" class="skeleton-item card">
+        <div class="s-header">
+          <div class="s-avatar"></div>
+          <div class="s-line short"></div>
+        </div>
+        <div class="s-line full"></div>
+        <div class="s-line full"></div>
       </div>
-      <p class="loading-text">正在努力加载内容...</p>
     </div>
 
-    <!-- 3. 空状态 (Empty State) -->
-    <div v-else-if="questions.length === 0" class="status-box empty-box">
-      <p class="status-text">暂时还没有问题。</p>
-      <p class="sub-text">您可以点击上方的“我要提问”来发布第一个问题。</p>
+    <!-- Empty State -->
+    <div v-else-if="questions.length === 0" class="empty-state">
+      <div class="empty-icon">🍃</div>
+      <p>這裡好安靜，快來發布第一條動態吧！</p>
     </div>
 
-    <!-- 4. 数据列表 (Data List) -->
-    <div v-else class="question-list" role="feed">
+    <!-- Feed List -->
+    <transition-group name="list" tag="div" class="question-list" v-else>
       <article 
-        v-for="question in questions" 
+        v-for="(question, index) in questions" 
         :key="question._id" 
         class="card question-card"
+        @click="handleNavigate(question._id)"
+        :style="{ '--delay': index * 0.1 + 's' }"
       >
-        <h2 class="question-title">{{ question.title }}</h2>
-        
-        <!-- 截取前80个字作为预览 -->
-        <p class="question-preview">
-          {{ question.content.length > 80 ? question.content.substring(0, 80) + '...' : question.content }}
-        </p>
-        
-        <div class="meta-info">
-          <span class="meta-item">
-            <i class="icon-answer">💬</i> 
-            {{ question.answers ? question.answers.length : 0 }} 个回答
-          </span>
-          <span class="meta-item">
-            {{ new Date(question.createdAt).toLocaleDateString() }}
-          </span>
+        <!-- User Info Header -->
+        <div class="card-header">
+          <div class="user-info">
+            <div class="avatar">{{ question.author.username.charAt(0) }}</div>
+            <div class="meta-text">
+              <span class="username">{{ question.author.username }}</span>
+              <span class="time">{{ new Date(question.createdAt).toLocaleDateString() }}</span>
+            </div>
+          </div>
+          <span class="category-tag">提問</span>
         </div>
 
-        <!-- 显性的大按钮 -->
-        <button 
-          @click="handleNavigate(question._id)" 
-          class="btn-view"
-          :disabled="isNavigating"
-          :aria-label="'查看问题详情：' + question.title"
-        >
-          {{ isNavigating ? '正在打开...' : '查看详情 / 回答' }}
-        </button>
+        <!-- Content -->
+        <h3 class="q-title">{{ question.title }}</h3>
+        <p class="q-preview">{{ question.content }}</p>
+
+        <!-- Footer Actions -->
+        <div class="card-footer">
+          <div class="action-item">
+            <span class="icon">💬</span>
+            <span class="count">{{ question.answers ? question.answers.length : 0 }} 回答</span>
+          </div>
+          <div class="action-item">
+            <span class="icon">🔥</span>
+            <span class="count">熱度</span>
+          </div>
+        </div>
       </article>
-    </div>
+    </transition-group>
 
   </div>
 </template>
 
 <style scoped>
-/* 基础容器 */
 .feed-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 10px;
-  font-family: "Microsoft YaHei", "Heiti SC", sans-serif; /* 选用清晰的无衬线字体 */
+  padding: 0 20px;
 }
 
-/* 通用卡片样式 */
-.card {
-  background: #ffffff;
-  border: 2px solid #e0e0e0; /* 明显的边框 */
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px; /* 大间距防误触 */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-/* --- 问题卡片样式 --- */
-.question-title {
-  font-size: 22px; /* 大字号标题 */
-  font-weight: bold;
-  color: #000000; /* 纯黑增强对比 */
-  margin-top: 0;
-  margin-bottom: 16px;
-  line-height: 1.4;
-}
-
-.question-preview {
-  font-size: 18px; /* 大字号正文 */
-  color: #333333; /* 深灰 */
-  line-height: 1.6; /* 宽松行高 */
+/* --- Card Styles --- */
+.question-card {
+  padding: 20px;
   margin-bottom: 20px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.5s ease backwards;
+  animation-delay: var(--delay);
 }
 
-.meta-info {
+/* 點擊時的波紋效果模擬 */
+.question-card:active {
+  transform: scale(0.98);
+  background: #fafafa;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
-  color: #666;
-  font-size: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee; /* 分割线 */
-}
-
-/* 显性按钮样式 */
-.btn-view {
-  width: 100%;
-  padding: 16px; /* 大触控区 */
-  font-size: 20px;
-  font-weight: bold;
-  color: white;
-  background-color: #2c3e50; /* 深色背景高对比 */
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-view:hover {
-  background-color: #1a252f;
-}
-
-.btn-view:active {
-  transform: scale(0.98);
-}
-
-.btn-view:disabled {
-  background-color: #95a5a6;
-  cursor: not-allowed;
-}
-
-/* --- 状态提示样式 (Error & Empty) --- */
-.status-box {
-  text-align: center;
-  padding: 40px 20px;
-  background: #fff;
-  border-radius: 12px;
-  border: 2px dashed #ccc;
-}
-
-.status-text {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.btn-retry {
-  padding: 15px 40px;
-  font-size: 18px;
-  background-color: #e74c3c; /* 红色醒目 */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* --- 骨架屏样式 (Skeleton) --- */
-.skeleton-card {
-  background: #fff;
-}
-
-.skeleton-title {
-  height: 28px;
-  background-color: #eee;
-  margin-bottom: 20px;
-  width: 70%;
-  border-radius: 4px;
-}
-
-.skeleton-text {
-  height: 20px;
-  background-color: #eee;
+  align-items: center;
   margin-bottom: 12px;
-  width: 100%;
-  border-radius: 4px;
 }
 
-.skeleton-text.short {
-  width: 60%;
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.skeleton-btn {
-  height: 50px;
-  background-color: #eee;
-  margin-top: 20px;
-  border-radius: 8px;
-}
-
-.loading-text {
-  text-align: center;
-  font-size: 18px;
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
   color: #666;
-  margin-top: 10px;
+  font-weight: bold;
 }
 
-/* 简单的骨架屏动画 */
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+.meta-text {
+  display: flex;
+  flex-direction: column;
 }
 
-.skeleton-card div {
+.username {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.category-tag {
+  font-size: 0.75rem;
+  background: #FFF5F5;
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.q-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  color: #222;
+}
+
+.q-preview {
+  font-size: 0.9375rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  border-top: 1px solid #f5f5f5;
+  padding-top: 12px;
+  display: flex;
+  gap: 20px;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* --- Skeleton Animation --- */
+.skeleton-item {
+  height: 180px;
+  background: #fff;
+}
+.s-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.s-avatar { width: 40px; height: 40px; background: #f0f0f0; border-radius: 50%; }
+.s-line { height: 12px; background: #f0f0f0; border-radius: 6px; margin-bottom: 10px; }
+.s-line.short { width: 100px; }
+.s-line.full { width: 100%; }
+
+.skeleton-item * {
   animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* --- Empty State --- */
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+.empty-icon { font-size: 3rem; margin-bottom: 10px; }
+
+/* --- List Transitions --- */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
 }
 </style>

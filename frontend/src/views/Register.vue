@@ -1,95 +1,122 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const showToast = inject('showToast')
+const isLoading = ref(false)
+
 const form = ref({
   username: '',
   phone: '',
   password: '',
   confirmPassword: ''
 })
-const error = ref('')
 
 const handleRegister = async () => {
+  if (form.value.password !== form.value.confirmPassword) {
+    return showToast('兩次密碼不一致', 'error')
+  }
+
+  isLoading.value = true
   try {
-    error.value = ''
     const response = await axios.post('/users/register', form.value)
     if (response.data.success) {
-      alert(response.data.message)
+      showToast('註冊成功！請登入', 'success')
       router.push('/login')
     }
   } catch (err) {
-    error.value = err.response?.data?.message || '註冊失敗'
+    showToast(err.response?.data?.message || '註冊失敗', 'error')
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
 
 <template>
-  <div class="card">
-    <h2>注册新账号</h2>
-    <form @submit.prevent="handleRegister">
-      <div class="form-group">
-        <label>您的名字：</label>
-        <input v-model="form.username" type="text" required placeholder="请输入名字">
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="circle-bg"></div>
+      <h1>Sign Up</h1>
+      <p>加入我們溫暖的社區</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="input-group">
+        <input v-model="form.username" type="text" class="input-field" placeholder="設定一個好聽的名字" />
       </div>
-      <div class="form-group">
-        <label>手机号码：</label>
-        <input v-model="form.phone" type="tel" required placeholder="请输入8位手机号">
+      <div class="input-group">
+        <input v-model="form.phone" type="tel" class="input-field" placeholder="手機號碼 (用於找回)" />
       </div>
-      <div class="form-group">
-        <label>设置密码：</label>
-        <input v-model="form.password" type="password" required placeholder="请输入密码">
+      <div class="input-group">
+        <input v-model="form.password" type="password" class="input-field" placeholder="設定密碼" />
       </div>
-      <div class="form-group">
-        <label>确认密码：</label>
-        <input v-model="form.confirmPassword" type="password" required placeholder="请再次输入密码">
+      <div class="input-group">
+        <input v-model="form.confirmPassword" type="password" class="input-field" placeholder="確認密碼" />
       </div>
-      <p v-if="error" class="error">{{ error }}</p>
-      <button type="submit" class="btn-submit">立即注册</button>
-    </form>
-    <div class="footer-link">
-      <p>已有账号？ <router-link to="/login">去登录</router-link></p>
+
+      <button class="btn btn-primary btn-block" @click="handleRegister" :disabled="isLoading">
+        {{ isLoading ? '提交中...' : '註冊帳號' }}
+      </button>
+
+      <div class="auth-footer">
+        <span @click="router.push('/login')" style="cursor: pointer; color: #888;">
+          ← 返回登入
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.form-group {
-  margin-bottom: 1.5rem;
-  text-align: left;
+/* 復用 Login 的樣式，保持一致性 */
+.auth-container {
+  min-height: 100vh;
+  background: white;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  font-weight: bold;
+
+.circle-bg {
+  position: absolute;
+  top: -120px;
+  left: -80px;
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); /* 註冊頁用不同的清新綠色 */
+  border-radius: 50%;
+  opacity: 0.2;
+  z-index: 0;
 }
-input {
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 1.2rem;
+
+.auth-header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 30px;
 }
-.btn-submit {
-  width: 100%;
-  margin-top: 1rem;
-  font-size: 1.3rem;
-  background-color: #27AE60; /* 注册按钮用绿色 */
+
+.auth-header h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-main);
+  margin-bottom: 10px;
 }
-.btn-submit:hover {
-  background-color: #219150;
+
+.auth-header p { color: var(--text-secondary); font-size: 1.125rem; }
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.error {
-  color: #e74c3c;
-  font-size: 1.1rem;
-  font-weight: bold;
-  background: #fadbd8;
-  padding: 10px;
-  border-radius: 8px;
-}
-.footer-link {
-  margin-top: 2rem;
-  font-size: 1.1rem;
+
+.auth-footer {
+  margin-top: 30px;
+  text-align: center;
 }
 </style>

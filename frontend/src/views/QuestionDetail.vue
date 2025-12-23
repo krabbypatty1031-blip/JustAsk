@@ -1,14 +1,17 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject, nextTick } from 'vue'
 import axios from '../api/axios'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const showToast = inject('showToast')
+const currentUser = inject('currentUser')
+
 const question = ref(null)
 const newAnswer = ref('')
-const error = ref('')
-const currentUser = ref(null)
+const isLoading = ref(true)
+const answersContainer = ref(null)
 
 const fetchQuestion = async () => {
   try {
@@ -17,147 +20,342 @@ const fetchQuestion = async () => {
       question.value = response.data.question
     }
   } catch (err) {
-    error.value = '加载问题失败'
-  }
-}
-
-const checkLogin = async () => {
-  try {
-    const response = await axios.get('/api/status')
-    currentUser.value = response.data.user
-  } catch (e) {
-    // ignore
+    showToast('加載失敗，問題可能已被刪除', 'error')
+    router.back()
+  } finally {
+    isLoading.value = false
   }
 }
 
 const submitAnswer = async () => {
   if (!currentUser.value) {
-    alert('请先登录后再回答')
+    showToast('請先登入', 'info')
     router.push('/login')
     return
   }
-  
+  if (!newAnswer.value.trim()) return
+
   try {
     const response = await axios.post(`/questions/${route.params.id}/answers`, {
       content: newAnswer.value
     })
     
     if (response.data.success) {
-      // Add new answer to the list locally
       question.value.answers.push(response.data.answer)
       newAnswer.value = ''
-      alert('回答提交成功！')
+      showToast('發送成功！', 'success')
+      // 滾動到底部
+      nextTick(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+      })
     }
   } catch (err) {
-    alert(err.response?.data?.message || '提交失败')
+    showToast('發送失敗', 'error')
   }
 }
 
 onMounted(() => {
   fetchQuestion()
-  checkLogin()
 })
 </script>
 
 <template>
-  <div v-if="question" class="container">
-    <div class="card question-card">
-      <h1>{{ question.title }}</h1>
-      <div class="meta">
-        <span>提问者: {{ question.author.username }}</span>
-        <span>时间: {{ new Date(question.createdAt).toLocaleString() }}</span>
-      </div>
-      <div class="content">
-        {{ question.content }}
-      </div>
+  <div class="detail-view">
+    <!-- Top Navigation Bar -->
+    <div class="nav-bar">
+      <button class="back-btn" @click="router.back()">←</button>
+      <span class="nav-title">詳情</span>
+      <div class="placeholder"></div>
     </div>
 
-    <div class="answers-section">
-      <h3>共 {{ question.answers ? question.answers.length : 0 }} 个回答</h3>
+    <div v-if="isLoading" class="loading-state">
+      <div class="spinner"></div>
+    </div>
+
+    <div v-else-if="question" class="content-wrapper">
       
-      <div v-for="answer in question.answers" :key="answer._id" class="card answer-card">
-        <div class="answer-meta">
-          <strong>{{ answer.author.username }}</strong> 说：
+      <!-- Question Card (OP) -->
+      <div class="question-header-card">
+        <h1 class="title">{{ question.title }}</h1>
+        <div class="author-row">
+          <div class="avatar">{{ question.author.username.charAt(0) }}</div>
+          <div class="info">
+            <span class="name">{{ question.author.username }}</span>
+            <span class="date">{{ new Date(question.createdAt).toLocaleString() }}</span>
+          </div>
         </div>
-        <div class="answer-content">
-          {{ answer.content }}
-        </div>
-        <div class="answer-date">
-          {{ new Date(answer.createdAt).toLocaleString() }}
+        <div class="body-text">
+          {{ question.content }}
         </div>
       </div>
+
+      <!-- Answers List (Chat Style) -->
+      <div class="answers-area" ref="answersContainer">
+        <div class="divider">
+          <span>共 {{ question.answers.length }} 條回覆</span>
+        </div>
+
+        <transition-group name="list">
+          <div 
+            v-for="answer in question.answers" 
+            :key="answer._id" 
+            class="answer-item"
+            :class="{ 'mine': currentUser && answer.author.username === currentUser.username }"
+          >
+            <div class="answer-avatar">{{ answer.author.username.charAt(0) }}</div>
+            <div class="answer-bubble">
+              <div class="answer-name" v-if="!(currentUser && answer.author.username === currentUser.username)">
+                {{ answer.author.username }}
+              </div>
+              <p>{{ answer.content }}</p>
+              <span class="answer-time">{{ new Date(answer.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+            </div>
+          </div>
+        </transition-group>
+        
+        <div class="bottom-spacer"></div>
+      </div>
+
     </div>
 
-    <div class="card reply-card">
-      <h3>我来回答</h3>
-      <div v-if="currentUser">
-        <textarea v-model="newAnswer" rows="4" placeholder="请输入您的回答..."></textarea>
-        <button @click="submitAnswer" class="btn-submit">提交回答</button>
-      </div>
-      <div v-else>
-        <p>请 <router-link to="/login">登录</router-link> 后参与回答</p>
-      </div>
+    <!-- Fixed Bottom Input -->
+    <div class="bottom-input-bar">
+      <input 
+        type="text" 
+        v-model="newAnswer" 
+        placeholder="寫下你的回答..." 
+        class="input-box"
+        @keyup.enter="submitAnswer"
+      >
+      <button class="send-btn" @click="submitAnswer" :disabled="!newAnswer.trim()">
+        發送
+      </button>
     </div>
-    
-    <div style="margin-top: 20px; text-align: center;">
-      <router-link to="/">返回首页</router-link>
-    </div>
-  </div>
-  <div v-else class="loading">
-    加载中...
   </div>
 </template>
 
 <style scoped>
-.container {
-  max-width: 800px;
-  margin: 0 auto;
+.detail-view {
+  background: #F7F8FA;
+  min-height: 100vh;
+  padding-top: 60px; /* nav height */
 }
-.question-card {
-  background-color: #fff;
-  border-left: 5px solid #646cff;
-}
-.meta {
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+
+/* Nav Bar */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   display: flex;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  z-index: 100;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
-.content {
-  font-size: 1.2rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  text-align: left;
-}
-.answers-section {
-  margin-top: 2rem;
-}
-.answer-card {
-  margin-bottom: 1rem;
-  text-align: left;
-}
-.answer-meta {
-  margin-bottom: 0.5rem;
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
   color: #333;
+  padding: 10px;
+  cursor: pointer;
 }
-.answer-content {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+
+.nav-title {
+  font-weight: 700;
+  font-size: 1.125rem;
 }
-.answer-date {
-  font-size: 0.8rem;
+
+.placeholder { width: 44px; }
+
+/* Question Header */
+.question-header-card {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.title {
+  font-size: 1.375rem;
+  margin-bottom: 15px;
+  line-height: 1.3;
+}
+
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-gradient);
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name { font-weight: bold; color: #333; }
+.date { font-size: 0.75rem; color: #999; }
+
+.body-text {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+/* Answers Area */
+.answers-area {
+  padding: 0 15px;
+}
+
+.divider {
+  text-align: center;
+  margin: 20px 0;
   color: #999;
-  text-align: right;
+  font-size: 0.8125rem;
+  position: relative;
 }
-textarea {
+.divider::before, .divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: #e0e0e0;
+}
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+.answer-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.answer-item.mine {
+  flex-direction: row-reverse;
+}
+
+.answer-avatar {
+  width: 36px;
+  height: 36px;
+  background: #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.answer-bubble {
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 18px;
+  border-top-left-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  max-width: 80%;
+  position: relative;
+}
+
+.answer-item.mine .answer-bubble {
+  background: #E1F5FE; /* 自己的氣泡顏色 */
+  border-radius: 18px;
+  border-top-right-radius: 4px;
+}
+
+.answer-name {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.answer-time {
+  font-size: 0.625rem;
+  color: #aaa;
+  float: right;
+  margin-top: 5px;
+  margin-left: 10px;
+}
+
+.bottom-spacer { height: 80px; }
+
+/* Bottom Input Bar */
+.bottom-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+  max-width: 480px;
+  background: #fff;
+  padding: 10px 15px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  border-top: 1px solid #eee;
+  z-index: 200;
 }
-.btn-submit {
-  width: 100%;
+
+.input-box {
+  flex: 1;
+  background: #f5f5f5;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 1rem;
 }
+.input-box:focus { outline: none; background: #eee; }
+
+.send-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.send-btn:disabled { opacity: 0.5; }
+
+/* Loading Spinner */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding-top: 100px;
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>

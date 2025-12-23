@@ -1,93 +1,166 @@
 :root {
-  font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; /* 使用清晰的黑体 */
-  line-height: 1.6;
-  font-weight: 500; /* 稍微加粗 */
+  /* --- 核心色彩系統 (Warm & Vibrant) --- */
+  --primary-gradient: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+  --primary-color: #FF5E62;
+  --secondary-color: #4CB8C4;
+  --accent-color: #FFD200;
+  
+  --bg-body: #F7F8FA;
+  --bg-card: #FFFFFF;
+  --text-main: #1A1A1A;
+  --text-secondary: #858E96;
+  --border-light: #F0F0F0;
+  
+  /* --- 陰影與層級 --- */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 32px rgba(255, 94, 98, 0.15);
+  
+  /* --- 字體策略 (Relative Units) --- */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* 定義全局縮放基準，默認 100% (16px) */
+  --app-scale: 100%;
 
-  /* 配色方案：暖色调，高对比度 */
-  --bg-color: #FFFBF0;       /* 暖米色背景，不刺眼 */
-  --text-color: #2C3E50;     /* 深色文字 */
-  --primary-color: #E67E22;  /* 醒目的橙色按钮 */
-  --primary-hover: #D35400;
-  --success-color: #27AE60;  /* 绿色 */
-  --border-color: #BDC3C7;
-  --card-bg: #FFFFFF;
+  /* 基於 rem 的字體變量，隨 html font-size 自動縮放 */
+  --font-xs: 0.75rem;    /* ~12px */
+  --font-sm: 0.875rem;   /* ~14px */
+  --font-base: 1rem;     /* ~16px */
+  --font-lg: 1.25rem;    /* ~20px */
+  --font-xl: 1.75rem;    /* ~28px */
+  --font-xxl: 2.125rem;  /* ~34px */
+
+  /* --- 尺寸與間距 (也使用 rem 以便隨字體縮放) --- */
+  --radius-sm: 0.75rem;
+  --radius-md: 1.25rem;
+  --radius-lg: 2rem;
+  
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1.25rem;
+  --spacing-lg: 1.875rem;
+}
+
+/* --- 全局重置 --- */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* 核心：設置根字體大小為變量，實現全局縮放 */
+  font-size: var(--app-scale);
+  transition: font-size 0.3s ease; /* 縮放時的平滑過渡 */
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-size: 20px; /* 基础字号加大 */
-  display: block; /* 覆盖默认的 flex */
+  padding: 0;
+  background-color: #EEF2F5;
+  color: var(--text-main);
+  font-size: var(--font-base);
+  line-height: 1.5;
+  overflow-x: hidden;
 }
 
 #app {
-  max-width: 100%;
+  max-width: 30rem; /* 480px / 16 = 30rem */
   margin: 0 auto;
-  padding: 20px;
+  min-height: 100vh;
+  background-color: var(--bg-body);
+  position: relative;
+  box-shadow: 0 0 50px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
 }
 
-h1 {
-  font-size: 2.5rem;
-  color: #000;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+/* --- 通用排版 --- */
+h1, h2, h3, p { margin: 0; }
+a { text-decoration: none; color: inherit; }
+ul, li { list-style: none; padding: 0; margin: 0; }
 
-h2 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-a {
-  color: var(--primary-color);
-  text-decoration: underline; /* 下划线更易识别为链接 */
-  font-weight: bold;
-}
-
-button {
-  font-size: 1.2rem;
-  padding: 15px 30px; /* 增大点击区域 */
-  border-radius: 12px; /* 圆角更柔和 */
+/* --- 組件：按鈕 --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.5rem; /* ~14px 24px */
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1.125rem; /* ~18px */
   border: none;
-  background-color: var(--primary-color);
-  color: white;
   cursor: pointer;
-  transition: transform 0.1s;
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  min-height: 3.125rem; /* ~50px, 確保可點擊 */
+  user-select: none;
 }
 
-button:active {
-  transform: scale(0.98);
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 94, 98, 0.3);
 }
 
-button:hover {
-  background-color: var(--primary-hover);
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
 }
 
-input {
-  font-size: 1.2rem;
-  padding: 15px;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background-color: #fff;
+.btn-block { width: 100%; }
+
+/* --- 組件：卡片 --- */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: none;
 }
 
-input:focus {
+/* --- 組件：輸入框 --- */
+.input-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.input-field {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+  background: #F2F4F8;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  transition: all 0.3s;
+}
+
+.input-field:focus {
+  background: #fff;
   border-color: var(--primary-color);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
 }
 
-/* 通用卡片样式 */
-.card {
-  background: var(--card-bg);
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  max-width: 600px;
-  margin: 20px auto;
-  border: 1px solid #eee;
+/* --- 動畫 --- */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Vue Transitions */
+.page-enter-active, .page-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+.page-enter-from { opacity: 0; transform: translateX(1.25rem); }
+.page-leave-to { opacity: 0; transform: translateX(-1.25rem); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 0px; background: transparent; }
