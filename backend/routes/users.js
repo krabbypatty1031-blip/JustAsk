@@ -21,8 +21,9 @@ router.post('/register', async function(req, res) {
     return res.status(400).json({ success: false, message: '兩次輸入的密碼不一致，請重新輸入。' });
   }
 
-  const db = await connectToDB();
+  let db;
   try {
+    db = await connectToDB();
     // Check if username or phone already exists
     const existingUser = await db.collection('Users').findOne({ 
       $or: [{ username: username }, { phone: phone }] 
@@ -46,19 +47,20 @@ router.post('/register', async function(req, res) {
 
     res.json({ success: true, message: '註冊成功！現在您可以登錄了。' });
   } catch (err) {
-    console.error(err);
+    console.error('Error in POST /register:', err);
     res.status(500).json({ success: false, message: '註冊時出了一點小問題，請稍後再試。' });
   } finally {
-    await db.client.close();
+    if (db) await db.client.close();
   }
 });
 
 // POST login
 router.post('/login', async function(req, res) {
   const { username, phone, password } = req.body;
-  const db = await connectToDB();
+  let db;
   
   try {
+    db = await connectToDB();
     // Find user by username AND phone
     const user = await db.collection('Users').findOne({ username, phone });
     if (!user) {
@@ -79,10 +81,10 @@ router.post('/login', async function(req, res) {
 
     res.json({ success: true, message: '登錄成功！', user: req.session.user });
   } catch (err) {
-    console.error(err);
+    console.error('Error in POST /login:', err);
     res.status(500).json({ success: false, message: '登錄時出了一點小問題，請稍後再試。' });
   } finally {
-    await db.client.close();
+    if (db) await db.client.close();
   }
 });
 
