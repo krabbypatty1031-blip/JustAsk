@@ -1,17 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '../api/axios'
+import QuestionFeed from '../components/QuestionFeed.vue'
 
-const message = ref('Loading...')
 const user = ref(null)
 
 const checkStatus = async () => {
   try {
     const response = await axios.get('/api/status')
-    message.value = response.data.message
     user.value = response.data.user
   } catch (error) {
-    message.value = 'Error connecting to backend'
     console.error(error)
   }
 }
@@ -26,50 +24,70 @@ const logout = async () => {
   }
 }
 
-onMounted(checkStatus)
+onMounted(() => {
+  checkStatus()
+})
 </script>
 
 <template>
   <div class="home">
-    <h1>JustAsk 问答</h1>
-    <div class="card">
-      <div v-if="user">
-        <p class="welcome-text">你好，<strong>{{ user.username }}</strong>！</p>
-        <button class="btn-large" @click="logout">退出登录</button>
-      </div>
-      <div v-else>
-        <p class="welcome-text">欢迎来到老年人问答社区</p>
-        <div class="action-buttons">
-          <router-link to="/login"><button class="btn-large">我要登录</button></router-link>
-          <router-link to="/register"><button class="btn-large secondary">注册新账号</button></router-link>
+    <header class="header">
+      <h1>JustAsk 问答社区</h1>
+      <div class="user-info">
+        <div v-if="user">
+          <span>欢迎, {{ user.username }}</span>
+          <button @click="logout" class="btn-small">退出</button>
+        </div>
+        <div v-else>
+          <router-link to="/login">登录</router-link> | 
+          <router-link to="/register">注册</router-link>
         </div>
       </div>
+    </header>
+
+    <div class="main-actions">
+      <router-link to="/ask" class="btn-ask">我要提问</router-link>
     </div>
+
+    <!-- 使用新的适老化问题列表组件 -->
+    <QuestionFeed />
   </div>
 </template>
 
 <style scoped>
 .home {
-  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 1rem;
 }
-.welcome-text {
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-}
-.action-buttons {
+.header {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
 }
-.btn-large {
-  width: 100%;
-  max-width: 300px;
-  font-size: 1.3rem;
-  padding: 1rem;
+.btn-small {
+  margin-left: 10px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
 }
-.secondary {
-  background-color: #27AE60; /* 绿色用于注册，区分开 */
+.main-actions {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.btn-ask {
+  display: inline-block;
+  background-color: #646cff;
+  color: white;
+  padding: 10px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.btn-ask:hover {
+  background-color: #535bf2;
 }
 </style>
