@@ -34,7 +34,12 @@ app.use(session({
   secret: 'justask-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  proxy: true, // Required for Render/Heroku (behind a proxy)
+  cookie: { 
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: true, // Required for SameSite='none'
+    sameSite: 'none' // Required for cross-origin cookies (Vercel -> Render)
+  }
 }));
 
 // Make user session available to all templates
