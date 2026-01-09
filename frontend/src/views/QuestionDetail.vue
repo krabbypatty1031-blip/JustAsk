@@ -318,7 +318,7 @@ onMounted(() => {
   align-items: center;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
   border-top: 1px solid #eee;
-  z-index: 200;
+  z-index: 1001; /* Increased to overlay bottom nav */
 }
 
 .input-box {
