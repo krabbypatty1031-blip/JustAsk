@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>註冊 - JustAsk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-size: 1.25rem; /* 較大的字體 */
+      background-color: #f0f2f5;
+    }
+    .form-container {
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .form-label {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .form-control {
+      font-size: 1.2rem;
+      padding: 12px;
+      border: 2px solid #ced4da;
+      border-radius: 10px;
+    }
+    .btn-primary {
+      font-size: 1.4rem;
+      padding: 12px;
+      font-weight: bold;
+      border-radius: 10px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .alert {
+      font-size: 1.1rem;
+    }
+    .helper-text {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fs-3" href="/">JustAsk</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="form-container">
+      <h2 class="text-center mb-4 fw-bold">創建新帳號</h2>
+      
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <form action="/users/register" method="POST">
+        <div class="mb-4">
+          <label for="username" class="form-label">您的名字 (用戶名)</label>
+          <input type="text" class="form-control" id="username" name="username" required placeholder="請輸入您的名字">
+          <div class="helper-text">這是大家在社區裡看到您的稱呼</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="phone" class="form-label">您的手機號 (8位數字)</label>
+          <input type="tel" class="form-control" id="phone" name="phone" required pattern="[0-9]{8}" placeholder="請輸入8位手機號">
+          <div class="helper-text">請輸入您的8位電話號碼，方便找回帳號</div>
+        </div>
+        
+        <div class="mb-4">
+          <label for="password" class="form-label">設置密碼</label>
+          <input type="password" class="form-control" id="password" name="password" required placeholder="請輸入密碼">
+          <div class="helper-text">請設置一個您容易記住的密碼</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="confirmPassword" class="form-label">再次輸入密碼</label>
+          <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required placeholder="請再次輸入密碼">
+        </div>
+
+        <button type="submit" class="btn btn-primary">完成註冊</button>
+      </form>
+      
+      <div class="text-center mt-4">
+        <p>已經有帳號了？ <a href="/users/login" class="fw-bold">點擊這裡去登錄</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
