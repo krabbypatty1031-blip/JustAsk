@@ -12,6 +12,9 @@ var questionsRouter = require('./routes/questions');
 
 var app = express();
 
+// Trust the reverse proxy (Render)
+app.set('trust proxy', 1);
+
 console.log('Current FRONTEND_URL:', process.env.FRONTEND_URL);
 
 // Enable CORS for frontend development and production
