@@ -30,15 +30,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const isProduction = !!process.env.FRONTEND_URL;
+
 app.use(session({
   secret: 'justask-secret-key',
   resave: false,
   saveUninitialized: true,
-  proxy: true, // Required for Render/Heroku (behind a proxy)
+  proxy: true,
   cookie: { 
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    secure: true, // Required for SameSite='none'
-    sameSite: 'none' // Required for cross-origin cookies (Vercel -> Render)
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: isProduction, // true in production (HTTPS), false in dev (HTTP)
+    sameSite: isProduction ? 'none' : 'lax' // 'none' for cross-origin prod, 'lax' for local
   }
 }));
 
