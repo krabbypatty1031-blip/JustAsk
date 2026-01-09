@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://justask-urgk.onrender.com/$1"
+    }
+  ]
+}
