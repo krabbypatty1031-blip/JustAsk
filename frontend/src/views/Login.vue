@@ -47,7 +47,7 @@ const handleLogin = async () => {
         <input v-model="username" type="text" class="input-field" placeholder="用戶名" />
       </div>
       <div class="input-group">
-        <input v-model="phone" type="tel" class="input-field" placeholder="手機號 (選填)" />
+        <input v-model="phone" type="tel" class="input-field" placeholder="手機號" />
       </div>
       <div class="input-group">
         <input v-model="password" type="password" class="input-field" placeholder="密碼" />
