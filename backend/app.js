@@ -16,7 +16,19 @@ console.log('Current FRONTEND_URL:', process.env.FRONTEND_URL);
 
 // Enable CORS for frontend development and production
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use env var or default to Vite local port
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const isVercel = origin.endsWith('.vercel.app');
+    const isLocal = origin.startsWith('http://localhost');
+    
+    if (isVercel || isLocal) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
