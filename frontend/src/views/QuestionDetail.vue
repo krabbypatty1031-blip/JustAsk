@@ -11,6 +11,7 @@ const currentUser = inject('currentUser')
 const question = ref(null)
 const newAnswer = ref('')
 const isLoading = ref(true)
+const showReplyModal = ref(false)
 const answersContainer = ref(null)
 
 const fetchQuestion = async () => {
@@ -27,12 +28,16 @@ const fetchQuestion = async () => {
   }
 }
 
-const submitAnswer = async () => {
+const openReplyModal = () => {
   if (!currentUser.value) {
     showToast('請先登入', 'info')
     router.push('/login')
     return
   }
+  showReplyModal.value = true
+}
+
+const submitAnswer = async () => {
   if (!newAnswer.value.trim()) return
 
   try {
@@ -43,8 +48,8 @@ const submitAnswer = async () => {
     if (response.data.success) {
       question.value.answers.push(response.data.answer)
       newAnswer.value = ''
+      showReplyModal.value = false // Close modal
       showToast('發送成功！', 'success')
-      // 滾動到底部
       nextTick(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
       })
@@ -87,6 +92,12 @@ onMounted(() => {
         <div class="body-text">
           {{ question.content }}
         </div>
+        <!-- Reply Button inside Card -->
+        <div class="card-actions">
+          <button class="reply-btn-outline" @click="openReplyModal">
+            💬 回覆這個問題
+          </button>
+        </div>
       </div>
 
       <!-- Answers List (Chat Style) -->
@@ -118,19 +129,23 @@ onMounted(() => {
 
     </div>
 
-    <!-- Fixed Bottom Input -->
-    <div class="bottom-input-bar">
-      <input 
-        type="text" 
-        v-model="newAnswer" 
-        placeholder="寫下你的回答..." 
-        class="input-box"
-        @keyup.enter="submitAnswer"
-      >
-      <button class="send-btn" @click="submitAnswer" :disabled="!newAnswer.trim()">
-        發送
-      </button>
+    <!-- Reply Modal Overlay -->
+    <div v-if="showReplyModal" class="modal-mask" @click.self="showReplyModal = false">
+      <div class="modal-container">
+        <h3>撰寫回覆</h3>
+        <textarea 
+          v-model="newAnswer" 
+          placeholder="分享你的看法..." 
+          class="modal-textarea"
+          rows="5"
+        ></textarea>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="showReplyModal = false">取消</button>
+          <button class="btn-send" @click="submitAnswer" :disabled="!newAnswer.trim()">發送</button>
+        </div>
+      </div>
     </div>
+
   </div>
 </template>
 
@@ -223,6 +238,29 @@ onMounted(() => {
   line-height: 1.6;
   color: #333;
   white-space: pre-wrap;
+  margin-bottom: 20px;
+}
+
+.card-actions {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 15px;
+  text-align: right;
+}
+
+.reply-btn-outline {
+  background: white;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reply-btn-outline:active {
+  background: var(--primary-color);
+  color: white;
 }
 
 /* Answers Area */
@@ -282,7 +320,7 @@ onMounted(() => {
 }
 
 .answer-item.mine .answer-bubble {
-  background: #E1F5FE; /* 自己的氣泡顏色 */
+  background: #E1F5FE;
   border-radius: 18px;
   border-top-right-radius: 4px;
 }
@@ -303,45 +341,84 @@ onMounted(() => {
 
 .bottom-spacer { height: 80px; }
 
-/* Bottom Input Bar */
-.bottom-input-bar {
+/* Modal Styles */
+.modal-mask {
   position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 480px;
-  background: #fff;
-  padding: 10px 15px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 10px;
   align-items: center;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-  border-top: 1px solid #eee;
-  z-index: 1001; /* Increased to overlay bottom nav */
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
 }
 
-.input-box {
-  flex: 1;
+.modal-container {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-container h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.modal-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  font-family: inherit;
+}
+.modal-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
   background: #f5f5f5;
   border: none;
-  padding: 12px 20px;
-  border-radius: 24px;
-  font-size: 1rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #666;
+  cursor: pointer;
 }
-.input-box:focus { outline: none; background: #eee; }
 
-.send-btn {
+.btn-send {
   background: var(--primary-color);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-radius: 20px;
   font-weight: bold;
   cursor: pointer;
-  transition: opacity 0.2s;
 }
-.send-btn:disabled { opacity: 0.5; }
+.btn-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* Loading Spinner */
 .loading-state {
