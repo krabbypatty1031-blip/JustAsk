@@ -49,9 +49,26 @@ onMounted(() => {
 })
 
 const navItems = [
-  { label: '首頁', path: '/', icon: '🏠' },
-  { label: '提問', path: '/ask', icon: '', special: true },
-  { label: '我的', path: '/profile', activePath: ['/login', '/register', '/profile'], icon: '👤' }
+  { 
+    label: '首頁', 
+    path: '/', 
+    // Home Icon
+    iconSvg: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>' 
+  },
+  { 
+    label: '提問', 
+    path: '/ask', 
+    special: true,
+    // Plus Icon for "Ask"
+    iconSvg: '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>'
+  },
+  { 
+    label: '我的', 
+    path: '/profile', 
+    activePath: ['/login', '/register', '/profile', '/forgot-password'], 
+    // User Icon
+    iconSvg: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>' 
+  }
 ]
 
 const isRouteActive = (item) => {
@@ -60,7 +77,6 @@ const isRouteActive = (item) => {
 }
 
 const handleNavClick = (item) => {
-  // 如果點擊 "我的" 且未登入，去登入頁 (Profile 頁面也會自己檢查，但這裡攔截體驗更好)
   if (item.label === '我的' && !user.value) {
     router.push('/login')
   } else {
@@ -79,7 +95,7 @@ const handleNavClick = (item) => {
       </router-view>
     </main>
 
-    <nav v-if="!['/login', '/register'].includes(route.path)" class="bottom-nav">
+    <nav v-if="!['/login', '/register', '/forgot-password'].includes(route.path)" class="bottom-nav">
       <div 
         v-for="item in navItems" 
         :key="item.path"
@@ -88,16 +104,19 @@ const handleNavClick = (item) => {
         @click="handleNavClick(item)"
       >
         <div class="icon-wrapper">
-          <template v-if="item.special">
-            <!-- Question Mark SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </template>
-          <template v-else>
-            {{ item.icon }}
-          </template>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="28" 
+            height="28" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"
+            v-html="item.iconSvg"
+          >
+          </svg>
         </div>
         <span class="nav-label">{{ item.label }}</span>
       </div>
@@ -123,7 +142,7 @@ const handleNavClick = (item) => {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 7rem; /* Increased from 5rem */
+  padding-bottom: 7rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -135,18 +154,17 @@ const handleNavClick = (item) => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 30rem; /* 跟 app 一樣寬 */
-  height: 6rem; /* Increased from 4.375rem (~70px -> ~96px) */
-  background: rgba(255, 255, 255, 0.7); /* More transparent */
-  backdrop-filter: blur(25px) saturate(180%); /* Frosted glass effect */
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 30rem;
+  height: 5.5rem; /* ~88px */
+  background: #ffffff; /* Solid background for better contrast */
+  border-top: 2px solid #f0f0f0; /* Clearer border */
   display: flex;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -0.5rem 1.5rem rgba(0,0,0,0.05);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
   z-index: 999;
-  border-top-left-radius: 1.5rem; /* Slightly larger radius */
-  border-top-right-radius: 1.5rem;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 .nav-item {
@@ -154,69 +172,73 @@ const handleNavClick = (item) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #B0B0B0;
-  transition: all 0.3s ease;
+  color: #888; /* Standard grey */
+  transition: all 0.2s ease;
   flex: 1;
   height: 100%;
   cursor: pointer;
+  padding-bottom: 5px;
 }
 
 .nav-item.active {
   color: var(--primary-color);
+  font-weight: bold;
 }
 
 .icon-wrapper {
-  font-size: 1.8rem; /* Increased from 1.5rem */
-  margin-bottom: 0.25rem;
-  transition: transform 0.2s;
-}
-
-.nav-item:active .icon-wrapper {
-  transform: scale(0.8);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-label {
-  font-size: 0.9rem; /* Increased from 0.75rem */
+  font-size: 1rem; /* 16px - clearly readable */
   font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Special styling for the middle "Ask" button */
+.nav-special {
+  position: relative;
+  top: -20px; /* Pop out effect */
 }
 
 .nav-special .icon-wrapper {
   background: var(--primary-gradient);
-  width: 4rem; /* Increased from 3rem */
-  height: 4rem;
+  width: 3.8rem;
+  height: 3.8rem;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: white;
-  font-size: 2.2rem; /* Increased icon inside */
-  box-shadow: 0 0.5rem 1rem rgba(255, 94, 98, 0.3);
-  margin-top: -2.5rem; /* Pop out more */
-  border: 0.3rem solid rgba(255, 255, 255, 0.8); /* Semi-transparent border match */
+  box-shadow: 0 8px 15px rgba(255, 94, 98, 0.4);
+  border: 4px solid white; /* Thicker white border */
 }
 
 .nav-special .nav-label {
-  margin-top: 0.25rem;
+  margin-top: 6px;
+  color: var(--text-main);
+  font-weight: 800;
 }
 
 .toast {
   position: fixed;
-  top: 1.25rem;
+  top: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.85);
+  background: #333;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 3rem;
-  font-size: 1rem;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 1.1rem; /* Larger font */
   font-weight: 500;
   z-index: 2000;
-  box-shadow: 0 0.6rem 2rem rgba(0,0,0,0.2);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   max-width: 90%;
   text-align: center;
 }
+
 
 .toast-enter-active, .toast-leave-active {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
