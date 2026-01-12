@@ -98,4 +98,41 @@ router.get('/logout', function(req, res) {
   });
 });
 
+// POST reset-password
+router.post('/reset-password', async function(req, res) {
+  const { username, phone, newPassword } = req.body;
+  
+  if (!newPassword) {
+     return res.status(400).json({ success: false, message: '請輸入新密碼' });
+  }
+
+  let db;
+  try {
+    db = await connectToDB();
+    // Verify user exists with matching username AND phone
+    const user = await db.collection('Users').findOne({ username, phone });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: '驗證失敗：用戶名與手機號不匹配。' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await db.collection('Users').updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword } }
+    );
+
+    res.json({ success: true, message: '密碼重置成功！請使用新密碼登入。' });
+
+  } catch (err) {
+    console.error('Error in POST /reset-password:', err);
+    res.status(500).json({ success: false, message: '重置密碼時出錯，請稍後再試。' });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
 module.exports = router;
