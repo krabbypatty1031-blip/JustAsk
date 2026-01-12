@@ -38,8 +38,12 @@ const handleToggleSpeech = (text, id) => {
     isSpeakingId.value = null
   }
 
-  utterance.onerror = () => {
+  utterance.onerror = (event) => {
     isSpeakingId.value = null
+    // Ignore errors caused by manual cancellation or interruption
+    if (event.error === 'interrupted' || event.error === 'canceled') {
+      return
+    }
     showToast('語音播報失敗', 'error')
   }
 
