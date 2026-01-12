@@ -59,8 +59,8 @@ const navItems = [
     label: '提問', 
     path: '/ask', 
     special: true,
-    // Plus Icon for "Ask"
-    iconSvg: '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>'
+    // Question Mark Icon for "Ask"
+    iconSvg: '<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line>'
   },
   { 
     label: '我的', 
