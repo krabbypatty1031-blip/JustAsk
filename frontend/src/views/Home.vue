@@ -3,6 +3,7 @@ import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import QuestionFeed from '../components/QuestionFeed.vue'
 import { useRouter } from 'vue-router'
+import { getAvatarUrl } from '../utils/avatar'
 
 const router = useRouter()
 const currentUser = inject('currentUser')
@@ -94,9 +95,12 @@ onMounted(() => {
 
            <!-- 如果已登入，顯示小頭像（模擬） -->
            <div class="avatar-container" v-if="currentUser">
-             <div class="user-avatar-small" @click="toggleUserMenu">
-               {{ currentUser.username.charAt(0).toUpperCase() }}
-             </div>
+             <img 
+               :src="getAvatarUrl(currentUser.username)" 
+               class="user-avatar-small" 
+               @click="toggleUserMenu"
+               alt="Me"
+             />
              <!-- Dropdown Menu -->
              <transition name="fade">
                <div v-if="showUserMenu" class="user-dropdown">
@@ -173,15 +177,11 @@ onMounted(() => {
 }
 
 .user-avatar-small {
-  width: 40px;
-  height: 40px;
-  background: var(--accent-color);
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #333;
+  object-fit: cover;
+  background: #fff;
   cursor: pointer;
   border: 2px solid #fff;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);

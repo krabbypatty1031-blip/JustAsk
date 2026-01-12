@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
+import { getAvatarUrl } from '../utils/avatar'
 
 const router = useRouter()
 const questions = ref([])
@@ -66,7 +67,7 @@ onMounted(() => {
         <!-- User Info Header -->
         <div class="card-header">
           <div class="user-info">
-            <div class="avatar">{{ question.author.username.charAt(0) }}</div>
+            <img :src="getAvatarUrl(question.author.username)" class="avatar" alt="avatar" />
             <div class="meta-text">
               <span class="username">{{ question.author.username }}</span>
               <span class="time">{{ new Date(question.createdAt).toLocaleDateString() }}</span>
@@ -132,16 +133,11 @@ onMounted(() => {
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  background: #f0f0f0;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #666;
-  font-weight: bold;
+  object-fit: cover;
+  background: #f0f0f0; /* Fallback */
 }
 
 .meta-text {

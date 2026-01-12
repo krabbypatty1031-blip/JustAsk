@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
+import { getAvatarUrl } from '../utils/avatar'
 
 const router = useRouter()
 const currentUser = inject('currentUser')
@@ -72,7 +73,7 @@ const navigateToQuestion = (id) => {
     <!-- Header Area -->
     <div class="profile-header">
       <div class="user-info" v-if="currentUser">
-        <div class="avatar-lg">{{ currentUser.username.charAt(0).toUpperCase() }}</div>
+        <img :src="getAvatarUrl(currentUser.username)" class="avatar-lg" alt="Profile" />
         <div class="texts">
           <h1 class="username">{{ currentUser.username }}</h1>
           <p class="subtitle">你好！今天過得怎麼樣？</p>
@@ -171,17 +172,13 @@ const navigateToQuestion = (id) => {
 }
 
 .avatar-lg {
-  width: 4.5rem; /* ~72px */
-  height: 4.5rem;
-  background: var(--primary-gradient);
+  width: 5rem;
+  height: 5rem;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 0.25rem 0.6rem rgba(255, 94, 98, 0.4);
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 0.25rem 0.6rem rgba(0,0,0,0.1);
+  border: 2px solid white;
 }
 
 .texts .username {

@@ -2,6 +2,7 @@
 import { ref, onMounted, inject, nextTick } from 'vue'
 import axios from '../api/axios'
 import { useRoute, useRouter } from 'vue-router'
+import { getAvatarUrl } from '../utils/avatar'
 
 const route = useRoute()
 const router = useRouter()
@@ -135,7 +136,7 @@ onMounted(() => {
           </button>
         </div>
         <div class="author-row">
-          <div class="avatar">{{ question.author.username.charAt(0) }}</div>
+          <img :src="getAvatarUrl(question.author.username)" class="avatar" alt="avatar" />
           <div class="info">
             <span class="name">{{ question.author.username }}</span>
             <span class="date">{{ new Date(question.createdAt).toLocaleString() }}</span>
@@ -165,7 +166,7 @@ onMounted(() => {
             class="answer-item"
             :class="{ 'mine': currentUser && answer.author.username === currentUser.username }"
           >
-            <div class="answer-avatar">{{ answer.author.username.charAt(0) }}</div>
+            <img :src="getAvatarUrl(answer.author.username)" class="answer-avatar" alt="avatar" />
             <div class="answer-bubble">
               <div class="answer-name" v-if="!(currentUser && answer.author.username === currentUser.username)">
                 {{ answer.author.username }}
@@ -274,16 +275,11 @@ onMounted(() => {
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
-  background: var(--primary-gradient);
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.125rem;
+  object-fit: cover;
+  background: #eee;
 }
 
 .info {
@@ -358,15 +354,11 @@ onMounted(() => {
 }
 
 .answer-avatar {
-  width: 36px;
-  height: 36px;
-  background: #ddd;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #666;
+  object-fit: cover;
+  background: #eee;
   flex-shrink: 0;
 }
 
