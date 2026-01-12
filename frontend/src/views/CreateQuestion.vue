@@ -122,7 +122,7 @@ const handleSubmit = async () => {
         v-model="title" 
         type="text" 
         class="input-title" 
-        placeholder="請輸入標題 (例如：如何製作...)" 
+        placeholder="請輸入標題:" 
         autofocus
         @focus="activeField = 'title'"
       />
