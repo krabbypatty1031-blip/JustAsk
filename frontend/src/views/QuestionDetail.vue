@@ -13,6 +13,44 @@ const newAnswer = ref('')
 const isLoading = ref(true)
 const showReplyModal = ref(false)
 const answersContainer = ref(null)
+const isSpeakingId = ref(null)
+
+const handleToggleSpeech = (text, id) => {
+  if (isSpeakingId.value === id) {
+    window.speechSynthesis.cancel()
+    isSpeakingId.value = null
+    return
+  }
+
+  // Stop any ongoing speech
+  window.speechSynthesis.cancel()
+
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'zh-HK' // Cantonese
+  utterance.rate = 0.85     // Slightly slower for elderly
+  utterance.pitch = 1.0
+
+  utterance.onstart = () => {
+    isSpeakingId.value = id
+  }
+
+  utterance.onend = () => {
+    isSpeakingId.value = null
+  }
+
+  utterance.onerror = () => {
+    isSpeakingId.value = null
+    showToast('語音播報失敗', 'error')
+  }
+
+  window.speechSynthesis.speak(utterance)
+}
+
+// Ensure speech stops when navigating away
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.speechSynthesis.cancel()
+})
 
 const fetchQuestion = async () => {
   try {
@@ -81,7 +119,17 @@ onMounted(() => {
       
       <!-- Question Card (OP) -->
       <div class="question-header-card">
-        <h1 class="title">{{ question.title }}</h1>
+        <div class="title-row">
+          <h1 class="title">{{ question.title }}</h1>
+          <button 
+            class="btn-speak-main" 
+            @click="handleToggleSpeech(`${question.title}。${question.content}`, 'question')"
+            :class="{ 'is-speaking': isSpeakingId === 'question' }"
+          >
+            <span v-if="isSpeakingId === 'question'">🛑 停止</span>
+            <span v-else>🔊 聽粵語</span>
+          </button>
+        </div>
         <div class="author-row">
           <div class="avatar">{{ question.author.username.charAt(0) }}</div>
           <div class="info">
@@ -119,7 +167,16 @@ onMounted(() => {
                 {{ answer.author.username }}
               </div>
               <p>{{ answer.content }}</p>
-              <span class="answer-time">{{ new Date(answer.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+              <div class="bubble-footer">
+                <button 
+                  class="btn-speak-sm" 
+                  @click="handleToggleSpeech(answer.content, answer._id)"
+                  :class="{ 'is-active': isSpeakingId === answer._id }"
+                >
+                  {{ isSpeakingId === answer._id ? '🛑' : '🔊' }}
+                </button>
+                <span class="answer-time">{{ new Date(answer.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+              </div>
             </div>
           </div>
         </transition-group>
@@ -418,6 +475,61 @@ onMounted(() => {
 .btn-send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Speech Buttons */
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btn-speak-main {
+  flex-shrink: 0;
+  background: #f0f7ff;
+  border: 1px solid #cce5ff;
+  color: #007bff;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-speak-main.is-speaking {
+  background: #fff0f0;
+  border-color: #ffcccc;
+  color: #ff4444;
+}
+
+.bubble-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.btn-speak-sm {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-speak-sm.is-active {
+  background: var(--primary-color);
+  color: white;
 }
 
 /* Loading Spinner */
