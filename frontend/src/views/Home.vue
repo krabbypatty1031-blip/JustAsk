@@ -158,6 +158,25 @@ onMounted(() => {
   border-bottom-right-radius: 2rem;
   box-shadow: 0 10px 40px rgba(0,0,0,0.05);
   margin-bottom: 1.5rem;
+  /* Ensure header content respects top notches if not covered by App padding */
+}
+
+@media (max-width: 380px) {
+  .home-header {
+    padding: 1rem;
+  }
+  
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-card {
+    padding: 1.5rem;
+  }
+  
+  .welcome-text h2 {
+    font-size: 1.5rem;
+  }
 }
 
 .header-content {

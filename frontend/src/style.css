@@ -61,6 +61,12 @@
   /* Gradients - Warm Sunrise */
   --header-gradient: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
   --primary-gradient: var(--header-gradient);
+
+  /* --- Safe Area Insets --- */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 /* --- Global Reset --- */
@@ -260,7 +266,31 @@ ul, li { list-style: none; padding: 0; margin: 0; }
   100% { transform: rotate(360deg); }
 }
 
-/* Scrollbar */
+
+/* --- Mobile First Defaults --- */
+@media (max-width: 480px) {
+  #app {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  
+  .card {
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+  }
+
+  .btn {
+    min-height: 48px; /* Touch target size */
+  }
+
+  .input-field {
+    min-height: 48px;
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }

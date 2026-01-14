@@ -133,6 +133,16 @@ const handleLogin = async () => {
   justify-content: center;
 }
 
+@media (max-width: 380px) {
+  .auth-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .auth-header h1 {
+    font-size: 2.5rem;
+  }
+}
+
 .circle-bg {
   position: absolute;
   top: -100px;

@@ -293,16 +293,33 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 64px;
+  height: calc(64px + var(--sat)); /* Add top safe area */
+  padding-top: var(--sat);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
+  padding-left: calc(1rem + var(--sal));
+  padding-right: calc(1rem + var(--sar));
   z-index: 100;
   border-bottom: 1px solid var(--border-color);
 }
+
+.bottom-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  padding: 0.75rem 1rem calc(1.5rem + var(--sab)); /* Safe area padding */
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+  z-index: 90;
+}
+
 
 .back-btn {
   background: none;

@@ -134,13 +134,15 @@ const handleNavClick = (item) => {
   flex-direction: column;
   height: 100vh;
   background: var(--bg-body);
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
 }
 
 .content-area {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 7rem;
+  padding-bottom: calc(7rem + var(--sab));
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -153,7 +155,8 @@ const handleNavClick = (item) => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 30rem;
-  height: 6.5rem;
+  height: calc(6.5rem + var(--sab));
+  padding-bottom: var(--sab);
   background: #ffffff;
   border-top: 1px solid var(--border-color);
   display: flex;
