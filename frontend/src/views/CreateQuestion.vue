@@ -263,7 +263,7 @@ const handleSubmit = async () => {
 /* --- Enhanced Speech Interface --- */
 .speech-container {
   position: fixed;
-  bottom: 2rem;
+  bottom: 8.5rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
