@@ -248,7 +248,7 @@ onMounted(() => {
   background: var(--bg-body);
   min-height: 100vh;
   padding-top: 70px;
-  padding-bottom: 80px; /* Space for bottom bar */
+  padding-bottom: 100px; /* Increased space for the fixed input bar */
 }
 
 /* Nav Bar */
