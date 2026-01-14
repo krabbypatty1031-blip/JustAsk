@@ -135,28 +135,37 @@ const handleSubmit = async () => {
       ></textarea>
     </div>
 
-    <!-- Speech Button -->
-    <div v-if="isSpeechSupported" class="speech-wrapper">
-      <div v-if="isListening" class="listening-tip">正在聽您說... (點擊停止)</div>
+    <!-- Modern Elderly-Friendly Speech Button -->
+    <div v-if="isSpeechSupported" class="speech-container">
+      <transition name="fade-slide">
+        <div v-if="isListening" class="listening-status">
+          <div class="waves">
+            <span></span><span></span><span></span>
+          </div>
+          <p>正在聆聽...</p>
+        </div>
+      </transition>
+
       <button 
-        class="speech-btn" 
-        :class="{ listening: isListening }"
+        class="speech-fab" 
+        :class="{ 'is-active': isListening }"
         @click="toggleSpeech"
+        :aria-label="isListening ? '停止錄音' : '開始語音輸入'"
       >
-        <span class="mic-icon">
+        <div class="fab-content">
           <!-- Stop Icon -->
-          <svg v-if="isListening" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-            <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
+          <svg v-if="isListening" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <rect x="6" y="6" width="12" height="12" rx="3" ry="3"></rect>
           </svg>
           <!-- Mic Icon -->
-          <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
             <line x1="12" y1="19" x2="12" y2="23"></line>
             <line x1="8" y1="23" x2="16" y2="23"></line>
           </svg>
-        </span>
-        <span v-if="!isListening" class="btn-text">語音輸入</span>
+          <span class="fab-label">{{ isListening ? '點擊停止' : '按我說話' }}</span>
+        </div>
       </button>
     </div>
   </div>
@@ -165,179 +174,211 @@ const handleSubmit = async () => {
 <style scoped>
 .create-view {
   min-height: 100vh;
-  background: white;
+  background: var(--bg-body);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 2px solid var(--border-color);
-  background: #fff;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
 }
 
-.title { font-weight: 800; font-size: 1.25rem; }
+.title { 
+  font-weight: 800; 
+  font-size: 1.25rem; 
+  color: var(--text-main);
+}
 
 .text-btn {
   background: none;
   border: none;
-  font-size: 1.125rem;
+  font-size: 1rem;
   cursor: pointer;
   font-weight: 600;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   transition: all 0.2s;
 }
 
-.text-btn.cancel { color: var(--text-secondary); }
-.text-btn.cancel:hover { background: var(--bg-input); }
-.text-btn.submit { color: var(--primary-color); font-weight: 700; }
-.text-btn.submit:hover { background: #FFF5F5; }
+.text-btn.cancel { color: var(--text-muted); }
+.text-btn.cancel:hover { background: var(--bg-input); color: var(--text-main); }
+.text-btn.submit { 
+  background: var(--primary-light); 
+  color: var(--primary-color); 
+}
+.text-btn.submit:hover { 
+  background: var(--primary-color); 
+  color: white; 
+}
 .text-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .form-area {
+  flex: 1;
   padding: 1.5rem;
+  background: white;
+  margin: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .input-title {
   width: 100%;
-  font-size: 1.75rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   border: none;
   outline: none;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   color: var(--text-main);
+  background: transparent;
 }
 .input-title::placeholder { color: var(--text-light); }
-.input-title:focus {
-  outline: none;
-}
 
 .divider {
-  height: 2px;
+  height: 1px;
   background: var(--border-color);
-  margin: 1rem 0 1.5rem;
+  margin: 1rem 0;
 }
 
 .input-content {
   width: 100%;
-  height: 20rem;
+  height: calc(100vh - 350px);
   border: none;
   outline: none;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   line-height: 1.6;
   resize: none;
-  color: var(--text-main);
+  color: var(--text-secondary);
+  background: transparent;
 }
 .input-content::placeholder { color: var(--text-light); }
-.input-content:focus {
-  outline: none;
-}
 
-/* Speech Button Styles */
-.speech-wrapper {
+/* --- Enhanced Speech Interface --- */
+.speech-container {
   position: fixed;
-  bottom: 9.5rem;
+  bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 30rem;
-  
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-right: 0;
-  
   z-index: 100;
-  pointer-events: none;
+  width: 100%;
+  pointer-events: none; /* Let clicks pass through container */
 }
 
-.listening-tip, .speech-btn {
+.speech-fab {
   pointer-events: auto;
-}
-
-.listening-tip {
-  background: var(--text-main);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 2rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  animation: fadeIn 0.3s;
-  max-width: 80%;
-  text-align: center;
-  box-shadow: var(--shadow-md);
-}
-
-.speech-btn {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 5.5rem;
+  height: 5.5rem;
   border-radius: 50%;
-  background: var(--primary-color);
-  color: white;
-  border: 3px solid white;
-  box-shadow: 0 8px 20px rgba(255, 82, 82, 0.4);
+  background: white;
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 30px rgba(249, 115, 22, 0.25);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.fab-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  gap: 0.25rem;
+  z-index: 2;
+}
+
+.fab-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Hover State */
+.speech-fab:hover {
+  transform: scale(1.05) translateY(-4px);
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.35);
+  border-color: var(--primary-color);
+}
+
+/* Active / Listening State */
+.speech-fab.is-active {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
+  transform: scale(1.1);
+  box-shadow: 0 15px 50px rgba(249, 115, 22, 0.5);
+}
+
+.speech-fab.is-active .fab-label {
+  color: rgba(255,255,255,0.9);
+}
+
+/* Listening Status Bubble */
+.listening-status {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--primary-light);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+/* Sound Wave Animation */
+.waves {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+}
+
+.waves span {
+  display: block;
+  width: 4px;
+  background: var(--primary-color);
+  border-radius: 4px;
+  animation: wave 1s infinite ease-in-out;
+}
+
+.waves span:nth-child(1) { animation-delay: 0s; height: 10px; }
+.waves span:nth-child(2) { animation-delay: 0.1s; height: 20px; }
+.waves span:nth-child(3) { animation-delay: 0.2s; height: 15px; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.5); }
+}
+
+/* Transitions */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
   transition: all 0.3s ease;
 }
 
-.speech-btn:hover,
-.speech-btn:focus {
-  transform: scale(1.05);
-  outline: none;
-}
-
-.speech-btn:active {
-  transform: scale(0.95);
-}
-
-.mic-icon {
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.btn-text {
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  font-weight: 700;
-}
-
-/* Animation for listening state */
-.speech-btn.listening {
-  background: #ff3b30;
-  transform: scale(1.1);
-  box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
-  animation: pulse-red 1.5s infinite;
-}
-
-.speech-btn.listening .mic-icon {
-  animation: none;
-}
-
-@keyframes pulse-red {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 25px rgba(255, 59, 48, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>
