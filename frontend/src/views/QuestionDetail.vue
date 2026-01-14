@@ -103,16 +103,30 @@ const submitAnswer = async () => {
 }
 
 const handleThank = async (answer) => {
+  if (!currentUser.value) {
+    showToast('請先登入', 'info')
+    router.push('/login')
+    return
+  }
+  
+  if (answer.hasThanked) {
+    showToast('您已經感謝過了', 'info')
+    return
+  }
+
   // Optimistic update
   if (!answer.thanks) answer.thanks = 0
   answer.thanks++
+  answer.hasThanked = true
   
   try {
     await axios.post(`/questions/${question.value._id}/answers/${answer._id}/thank`)
     showToast('已發送感謝！', 'success')
   } catch (e) {
     answer.thanks-- // Revert on error
-    showToast('操作失敗', 'error')
+    answer.hasThanked = false
+    const msg = e.response?.data?.message || '操作失敗'
+    showToast(msg, 'error')
   }
 }
 
@@ -207,9 +221,15 @@ onMounted(() => {
                 {{ isSpeakingId === answer._id ? '停止' : '聽回答' }}
               </button>
               
-              <!-- Placeholder for future 'Like' feature -->
-              <button class="action-btn like-btn" @click="handleThank(answer)">
-                <span class="icon">👍</span> 謝謝 {{ answer.thanks ? `(${answer.thanks})` : '' }}
+              <!-- 'Like' feature -->
+              <button 
+                class="action-btn like-btn" 
+                @click="handleThank(answer)"
+                :class="{ 'thanked': answer.hasThanked }"
+                :disabled="answer.hasThanked"
+              >
+                <span class="icon">{{ answer.hasThanked ? '❤️' : '👍' }}</span> 
+                {{ answer.hasThanked ? '已感謝' : '謝謝' }} {{ answer.thanks ? `(${answer.thanks})` : '' }}
               </button>
             </div>
           </div>
@@ -518,6 +538,13 @@ onMounted(() => {
   background: var(--primary-light);
   color: var(--primary-color);
   border-color: var(--primary-color);
+}
+
+.action-btn.thanked {
+  background: #FFF0F0;
+  color: #E11D48;
+  border-color: #FECDD3;
+  cursor: default;
 }
 
 /* --- Fixed Bottom Input Bar --- */

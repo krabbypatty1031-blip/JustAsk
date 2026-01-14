@@ -65,6 +65,7 @@ router.get('/:id', async function(req, res) {
   try {
     db = await connectToDB();
     const questionId = new ObjectId(req.params.id);
+    const currentUserId = req.session.user ? req.session.user.id : null;
 
     // Increment view count
     await db.collection('Questions').updateOne(
@@ -76,6 +77,20 @@ router.get('/:id', async function(req, res) {
     if (!question) {
       return res.status(404).json({ success: false, message: '找不到該問題' });
     }
+
+    // Process answers to add 'hasThanked' flag and remove sensitive 'thankedBy' array
+    if (question.answers) {
+      question.answers.forEach(answer => {
+        answer.hasThanked = false;
+        if (answer.thankedBy && currentUserId) {
+          // Check if current user ID is in the list
+          answer.hasThanked = answer.thankedBy.includes(currentUserId);
+        }
+        // Remove the list from response for privacy
+        delete answer.thankedBy;
+      });
+    }
+
     res.json({ success: true, question });
   } catch (err) {
     console.error('Error in GET /questions/:id:', err);
@@ -86,20 +101,39 @@ router.get('/:id', async function(req, res) {
 });
 
 // POST /questions/:id/answers/:answerId/thank - Increment thanks count for an answer
-router.post('/:id/answers/:answerId/thank', async function(req, res) {
+router.post('/:id/answers/:answerId/thank', requireLogin, async function(req, res) {
   let db;
   try {
     db = await connectToDB();
     const questionId = new ObjectId(req.params.id);
     const answerId = new ObjectId(req.params.answerId);
+    const userId = req.session.user.id;
 
+    // Use query to ensure user hasn't thanked yet
     const result = await db.collection('Questions').updateOne(
-      { _id: questionId, "answers._id": answerId },
-      { $inc: { "answers.$.thanks": 1 } }
+      { 
+        _id: questionId, 
+        "answers._id": answerId,
+        "answers.thankedBy": { $ne: userId } // Condition: User NOT in thankedBy array
+      },
+      { 
+        $inc: { "answers.$.thanks": 1 },
+        $push: { "answers.$.thankedBy": userId }
+      }
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ success: false, message: '找不到該回答' });
+      // Check if it failed because it was already thanked or because the answer doesn't exist
+      const check = await db.collection('Questions').findOne({
+        _id: questionId,
+        "answers._id": answerId
+      });
+      
+      if (!check) {
+        return res.status(404).json({ success: false, message: '找不到該回答' });
+      } else {
+        return res.status(400).json({ success: false, message: '您已經感謝過了' });
+      }
     }
 
     res.json({ success: true, message: '感谢成功' });
