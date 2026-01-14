@@ -93,7 +93,7 @@ const handleNavClick = (item) => {
       </router-view>
     </main>
 
-    <nav v-if="!['/login', '/register', '/forgot-password'].includes(route.path)" class="bottom-nav">
+    <nav v-if="!['/login', '/register', '/forgot-password', '/ask'].includes(route.path)" class="bottom-nav">
       <div 
         v-for="item in navItems" 
         :key="item.path"

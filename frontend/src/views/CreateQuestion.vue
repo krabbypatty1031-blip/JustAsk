@@ -171,45 +171,48 @@ const handleSubmit = async () => {
       </div>
     </div>
 
-    <!-- Bottom Action Bar -->
+    <!-- Bottom Action Bar (Redesigned for Centered Voice) -->
     <div class="action-bar-bottom">
-      <!-- Modern Elderly-Friendly Speech Button -->
-      <div v-if="isSpeechSupported" class="speech-wrapper">
-        <transition name="fade-slide">
-          <div v-if="isListening" class="listening-status">
-            <div class="waves"><span></span><span></span><span></span></div>
-            <p>正在聽...</p>
-          </div>
-        </transition>
+      <div class="action-container-inner">
+        <!-- Speech Button Group (Centered) -->
+        <div v-if="isSpeechSupported" class="speech-group-centered">
+          <transition name="fade-slide">
+            <div v-if="isListening" class="listening-status">
+              <div class="waves"><span></span><span></span><span></span></div>
+              <p>正在聽您說...</p>
+            </div>
+          </transition>
 
+          <button 
+            class="speech-fab-centered" 
+            :class="{ 'is-active': isListening }"
+            @click="toggleSpeech"
+          >
+            <div class="fab-content">
+              <svg v-if="isListening" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </div>
+          </button>
+          <span class="fab-hint">{{ isListening ? '點擊停止' : '按住/點擊 語音輸入' }}</span>
+        </div>
+
+        <!-- Submit Button (Full Width) -->
         <button 
-          class="speech-fab" 
-          :class="{ 'is-active': isListening }"
-          @click="toggleSpeech"
+          class="btn btn-primary btn-submit-full" 
+          @click="handleSubmit" 
+          :disabled="isLoading || !title.trim()"
         >
-          <div class="fab-content">
-            <svg v-if="isListening" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-          </div>
+          <span v-if="isLoading" class="spinner"></span>
+          <span v-else>好了，發布提問</span>
         </button>
-        <span class="fab-hint">{{ isListening ? '點擊停止' : '用語音輸入' }}</span>
       </div>
-
-      <button 
-        class="btn btn-primary btn-submit-large" 
-        @click="handleSubmit" 
-        :disabled="isLoading || !title.trim()"
-      >
-        <span v-if="isLoading" class="spinner"></span>
-        <span v-else>立即發布</span>
-      </button>
     </div>
   </div>
 </template>
@@ -342,7 +345,7 @@ const handleSubmit = async () => {
   border-color: var(--primary-color);
 }
 
-/* --- Bottom Action Bar --- */
+/* --- Bottom Action Bar (Stacked Layout) --- */
 .action-bar-bottom {
   position: fixed;
   bottom: 0;
@@ -350,88 +353,93 @@ const handleSubmit = async () => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem 1.5rem 2rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  background: white;
+  padding: 1rem 1.5rem 2.5rem;
   border-top: 1px solid var(--border-color);
   z-index: 100;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.08);
 }
 
-.btn-submit-large {
-  flex: 1;
-  margin-left: 1.5rem;
-  height: 4rem;
-  border-radius: var(--radius-lg);
-  font-size: 1.25rem;
-  font-weight: 800;
-  box-shadow: 0 8px 16px rgba(249, 115, 22, 0.3);
-}
-
-/* --- Redesigned Speech FAB --- */
-.speech-wrapper {
+.action-container-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1.5rem;
 }
 
-.speech-fab {
-  width: 4.5rem;
-  height: 4.5rem;
+.speech-group-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.speech-fab-centered {
+  width: 5.5rem;
+  height: 5.5rem;
   border-radius: 50%;
-  background: white;
-  border: 2px solid var(--primary-color);
+  background: var(--bg-body);
+  border: 3px solid var(--primary-color);
   color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.speech-fab.is-active {
+.speech-fab-centered.is-active {
   background: var(--primary-gradient);
   color: white;
   border-color: transparent;
   transform: scale(1.1);
+  box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+}
+
+.btn-submit-full {
+  width: 100%;
+  height: 4rem;
+  border-radius: var(--radius-lg);
+  font-size: 1.375rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
 }
 
 .fab-hint {
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-secondary);
 }
 
 .listening-status {
   position: absolute;
-  bottom: 110%;
-  left: 0;
-  background: var(--text-main);
+  bottom: 120%;
+  background: rgba(0,0,0,0.85);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 2rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   white-space: nowrap;
+  backdrop-filter: blur(4px);
+  z-index: 101;
 }
 
 .waves {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 .waves span {
-  width: 3px;
-  height: 12px;
-  background: white;
-  animation: wave 1s infinite alternate;
+  width: 4px;
+  height: 16px;
+  background: var(--primary-color);
+  border-radius: 2px;
+  animation: wave 0.8s infinite alternate;
 }
-@keyframes wave { from { height: 4px; } to { height: 16px; } }
+@keyframes wave { from { height: 6px; } to { height: 20px; } }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
