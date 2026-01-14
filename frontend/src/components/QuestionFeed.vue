@@ -99,45 +99,56 @@ onMounted(() => {
 
 <style scoped>
 .feed-container {
-  padding: 0 20px;
+  padding: 0 1.25rem;
 }
 
 /* --- Card Styles --- */
 .question-card {
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  animation: slideUp 0.5s ease backwards;
+  animation: slideUp 0.3s ease backwards;
   animation-delay: var(--delay);
+  border: 2px solid var(--border-color);
 }
 
-/* 點擊時的波紋效果模擬 */
+.question-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
 .question-card:active {
-  transform: scale(0.98);
-  background: #fafafa;
+  transform: scale(0.99);
+  background: var(--bg-hover);
+}
+
+.question-card:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.75rem;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  background: #f0f0f0; /* Fallback */
+  background: #f0f0f0;
+  border: 2px solid var(--border-color);
 }
 
 .meta-text {
@@ -147,37 +158,38 @@ onMounted(() => {
 
 .username {
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 1.125rem;
   color: var(--text-main);
 }
 
 .time {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  color: var(--text-muted);
 }
 
 .category-tag {
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
   background: #FFF5F5;
   color: var(--primary-color);
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.75rem;
   font-weight: 600;
+  border: 1px solid rgba(255, 82, 82, 0.2);
 }
 
 .q-title {
-  font-size: 1.125rem;
+  font-size: 1.375rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 0.75rem;
   line-height: 1.4;
-  color: #222;
+  color: var(--text-main);
 }
 
 .q-preview {
-  font-size: 0.9375rem;
-  color: #666;
-  line-height: 1.5;
-  margin-bottom: 16px;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -185,29 +197,39 @@ onMounted(() => {
 }
 
 .card-footer {
-  border-top: 1px solid #f5f5f5;
-  padding-top: 12px;
+  border-top: 2px solid var(--border-color);
+  padding-top: 1rem;
   display: flex;
-  gap: 20px;
+  gap: 1.5rem;
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
+  gap: 0.5rem;
+  font-size: 1rem;
   color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+}
+
+.action-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
 }
 
 /* --- Skeleton Animation --- */
 .skeleton-item {
-  height: 180px;
+  height: 200px;
   background: #fff;
+  border: 2px solid var(--border-color);
 }
-.s-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.s-avatar { width: 40px; height: 40px; background: #f0f0f0; border-radius: 50%; }
-.s-line { height: 12px; background: #f0f0f0; border-radius: 6px; margin-bottom: 10px; }
-.s-line.short { width: 100px; }
+.s-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+.s-avatar { width: 48px; height: 48px; background: #f0f0f0; border-radius: 50%; }
+.s-line { height: 16px; background: #f0f0f0; border-radius: 8px; margin-bottom: 1rem; }
+.s-line.short { width: 120px; }
 .s-line.full { width: 100%; }
 
 .skeleton-item * {
@@ -217,19 +239,23 @@ onMounted(() => {
 /* --- Empty State --- */
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: 3rem;
   color: var(--text-secondary);
 }
-.empty-icon { font-size: 3rem; margin-bottom: 10px; }
+.empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+.empty-state p {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
 
 /* --- List Transitions --- */
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.5s ease;
+  transition: all 0.3s ease;
 }
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(20px);
 }
 </style>

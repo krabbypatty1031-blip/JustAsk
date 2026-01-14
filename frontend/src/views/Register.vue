@@ -47,68 +47,113 @@ const handleRegister = async () => {
 
     <div class="auth-card">
       <div class="input-group">
-        <input v-model="form.username" type="text" class="input-field" placeholder="設定一個好聽的名字" />
+        <label for="reg-username" class="input-label">用戶名</label>
+        <input 
+          id="reg-username"
+          v-model="form.username" 
+          type="text" 
+          class="input-field" 
+          placeholder="設定一個好聽的名字"
+          aria-label="用戶名"
+          autocomplete="username"
+          required
+        />
       </div>
       <div class="input-group">
-        <input v-model="form.phone" type="tel" class="input-field" placeholder="手機號碼 (用於找回)" />
+        <label for="reg-phone" class="input-label">手機號碼</label>
+        <input 
+          id="reg-phone"
+          v-model="form.phone" 
+          type="tel" 
+          class="input-field" 
+          placeholder="請輸入手機號碼"
+          aria-label="手機號碼"
+          autocomplete="tel"
+          required
+        />
       </div>
       <div class="input-group" style="position: relative;">
+        <label for="reg-password" class="input-label">密碼</label>
         <input 
+          id="reg-password"
           v-model="form.password" 
           :type="isPasswordVisible ? 'text' : 'password'" 
           class="input-field" 
-          placeholder="設定密碼" 
+          placeholder="請設定您的密碼"
+          aria-label="密碼"
+          autocomplete="new-password"
+          required
         />
         <button 
           type="button"
           class="password-toggle"
           @click="isPasswordVisible = !isPasswordVisible"
+          :aria-label="isPasswordVisible ? '隱藏密碼' : '顯示密碼'"
+          :aria-pressed="isPasswordVisible"
         >
           <div class="toggle-content">
-            <svg v-if="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-if="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
               <line x1="1" y1="1" x2="23" y2="23"></line>
             </svg>
-            <span style="margin-left: 4px; font-size: 14px; font-weight: 500;">{{ isPasswordVisible ? '隱藏' : '顯示' }}</span>
+            <span>{{ isPasswordVisible ? '隱藏' : '顯示' }}</span>
           </div>
         </button>
       </div>
       <div class="input-group" style="position: relative;">
+        <label for="reg-confirm-password" class="input-label">確認密碼</label>
         <input 
+          id="reg-confirm-password"
           v-model="form.confirmPassword" 
           :type="isConfirmPasswordVisible ? 'text' : 'password'" 
           class="input-field" 
-          placeholder="確認密碼" 
+          placeholder="請再次輸入密碼"
+          aria-label="確認密碼"
+          autocomplete="new-password"
+          required
         />
         <button 
           type="button"
           class="password-toggle"
           @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+          :aria-label="isConfirmPasswordVisible ? '隱藏確認密碼' : '顯示確認密碼'"
+          :aria-pressed="isConfirmPasswordVisible"
         >
           <div class="toggle-content">
-            <svg v-if="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-if="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
               <line x1="1" y1="1" x2="23" y2="23"></line>
             </svg>
-            <span style="margin-left: 4px; font-size: 14px; font-weight: 500;">{{ isConfirmPasswordVisible ? '隱藏' : '顯示' }}</span>
+            <span>{{ isConfirmPasswordVisible ? '隱藏' : '顯示' }}</span>
           </div>
         </button>
       </div>
 
-      <button class="btn btn-primary btn-block" @click="handleRegister" :disabled="isLoading">
+      <button 
+        class="btn btn-primary btn-block btn-lg" 
+        @click="handleRegister" 
+        :disabled="isLoading"
+        aria-live="polite"
+      >
         {{ isLoading ? '提交中...' : '註冊帳號' }}
       </button>
 
       <div class="auth-footer">
-        <span @click="router.push('/login')" style="cursor: pointer; color: #888;">
+        <span 
+          @click="router.push('/login')" 
+          style="cursor: pointer; color: var(--text-muted); font-size: 1.125rem; font-weight: 600;"
+          role="button"
+          tabindex="0"
+          @keypress.enter="router.push('/login')"
+        >
           ← 返回登入
         </span>
       </div>
@@ -123,7 +168,7 @@ const handleRegister = async () => {
   background: white;
   position: relative;
   overflow: hidden;
-  padding: 40px 30px;
+  padding: 3rem 2rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -131,65 +176,77 @@ const handleRegister = async () => {
 
 .circle-bg {
   position: absolute;
-  top: -120px;
-  left: -80px;
-  width: 350px;
-  height: 350px;
-  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); /* 註冊頁用不同的清新綠色 */
+  top: -150px;
+  left: -100px;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #4CB8C4 0%, #2196F3 100%);
   border-radius: 50%;
-  opacity: 0.2;
+  opacity: 0.15;
   z-index: 0;
 }
 
 .auth-header {
   position: relative;
   z-index: 1;
-  margin-bottom: 30px;
+  margin-bottom: 2.5rem;
+  text-align: center;
 }
 
 .auth-header h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 900;
   color: var(--text-main);
-  margin-bottom: 10px;
+  margin-bottom: 0.75rem;
 }
 
-.auth-header p { color: var(--text-secondary); font-size: 1.125rem; }
+.auth-header p { color: var(--text-secondary); font-size: 1.25rem; }
 
 .auth-card {
   position: relative;
   z-index: 1;
-  animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  max-width: 450px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .auth-footer {
-  margin-top: 30px;
+  margin-top: 2.5rem;
   text-align: center;
+  font-size: 1.125rem;
 }
 
 .password-toggle {
   position: absolute;
-  right: 15px;
+  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
+  background: var(--bg-input);
+  border: 2px solid var(--border-color);
   cursor: pointer;
-  color: #666;
-  padding: 4px 8px;
+  color: var(--text-secondary);
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
-  background: #f8f9fa;
-  border-radius: 15px;
+  border-radius: 1rem;
+  min-height: 2.75rem;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
-.password-toggle:hover {
+.password-toggle:hover,
+.password-toggle:focus {
   color: var(--primary-color);
-  background: #f0f0f0;
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  outline: none;
 }
 
 .toggle-content {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 </style>

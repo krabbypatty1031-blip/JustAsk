@@ -154,138 +154,168 @@ const navigateToQuestion = (id) => {
 <style scoped>
 .profile-view {
   min-height: 100vh;
-  padding-bottom: 2rem;
+  padding-bottom: 2.5rem;
 }
 
 /* Header */
 .profile-header {
   background: white;
-  padding: 2rem 1.25rem;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 0.125rem 0.6rem rgba(0,0,0,0.03);
+  padding: 2.5rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .avatar-lg {
-  width: 5rem;
-  height: 5rem;
+  width: 5.5rem;
+  height: 5.5rem;
   border-radius: 50%;
   object-fit: cover;
   background: #fff;
-  box-shadow: 0 0.25rem 0.6rem rgba(0,0,0,0.1);
-  border: 2px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border: 3px solid white;
 }
 
 .texts .username {
-  font-size: 1.5rem; /* ~24px */
-  font-weight: 800;
-  margin-bottom: 0.25rem;
-  color: #333;
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
 }
 .texts .subtitle {
-  color: #888;
-  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  font-weight: 500;
 }
 
 /* Tabs */
 .tabs-container {
   background: white;
-  min-height: 20rem;
-  border-top-left-radius: 1.5rem;
-  border-top-right-radius: 1.5rem;
-  box-shadow: 0 -0.3rem 1.25rem rgba(0,0,0,0.02);
-  padding: 1.25rem;
+  min-height: 22rem;
+  border-top-left-radius: 2rem;
+  border-top-right-radius: 2rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+  padding: 1.5rem;
+  border: 2px solid var(--border-color);
+  border-bottom: none;
 }
 
 .tabs-header {
   display: flex;
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid #f0f0f0;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .tab-btn {
   background: none;
   border: none;
-  padding-bottom: 0.6rem;
-  font-size: 1rem;
-  color: #999;
+  padding: 0.75rem 0;
+  font-size: 1.125rem;
+  color: var(--text-light);
   cursor: pointer;
   position: relative;
   font-weight: 600;
+  transition: all 0.2s;
+  min-height: 3rem;
+}
+
+.tab-btn:hover {
+  color: var(--text-secondary);
 }
 
 .tab-btn.active {
   color: var(--primary-color);
+  font-weight: 700;
 }
 
 .tab-btn.active::after {
   content: '';
   position: absolute;
-  bottom: -1px;
+  bottom: -2px;
   left: 0;
   width: 100%;
-  height: 0.2rem;
+  height: 0.25rem;
   background: var(--primary-color);
-  border-radius: 0.2rem;
+  border-radius: 0.25rem;
 }
 
 /* List Items */
 .list-item {
-  padding: 1rem 0;
-  border-bottom: 1px solid #f5f5f5;
+  padding: 1.25rem 0;
+  border-bottom: 2px solid var(--border-color);
   cursor: pointer;
+  transition: background 0.2s;
 }
+
+.list-item:hover {
+  background: var(--bg-hover);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 .list-item:last-child { border-bottom: none; }
 
 .item-title {
-  font-size: 1.125rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #333;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text-main);
 }
 
 .item-meta {
-  font-size: 0.8rem;
-  color: #999;
+  font-size: 1rem;
+  color: var(--text-muted);
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
+  font-weight: 500;
 }
 
 .item-tag {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
   color: var(--secondary-color);
-  background: #e0f7fa;
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-  margin-bottom: 0.3rem;
+  background: #E1F5FE;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .empty-msg {
   text-align: center;
-  color: #ccc;
-  padding: 2.5rem 0;
+  color: var(--text-muted);
+  padding: 3rem 0;
+  font-size: 1.25rem;
+  font-weight: 500;
 }
 
 .loading-text {
   text-align: center;
-  padding: 1.25rem;
-  color: #999;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
 }
 
 /* Logout */
 .logout-area {
-  padding: 1.25rem;
-  margin-top: 1.25rem;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
 }
 .logout-btn {
-  border-color: #ddd;
-  color: #666;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.logout-btn:hover {
+  border-color: var(--error-color);
+  color: var(--error-color);
 }
 </style>

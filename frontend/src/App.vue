@@ -33,8 +33,6 @@ router.afterEach(() => { checkStatus() })
 const initFontSize = () => {
   const savedLevel = localStorage.getItem('user_font_pref')
   if (savedLevel) {
-    // 復用 Profile 中的邏輯，這裡直接設置 CSS 變量
-    // 0 -> 100%, 1 -> 112.5%, 2 -> 125%
     const levels = ['100%', '112.5%', '125%']
     const level = parseInt(savedLevel)
     if (levels[level]) {
@@ -43,9 +41,18 @@ const initFontSize = () => {
   }
 }
 
+// 初始化高對比模式
+const initHighContrast = () => {
+  const savedHighContrast = localStorage.getItem('high_contrast')
+  if (savedHighContrast === 'true') {
+    document.body.classList.add('high-contrast-mode')
+  }
+}
+
 onMounted(() => {
   checkStatus()
   initFontSize()
+  initHighContrast()
 })
 
 const navItems = [
@@ -155,16 +162,16 @@ const handleNavClick = (item) => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 30rem;
-  height: 5.5rem; /* ~88px */
-  background: #ffffff; /* Solid background for better contrast */
-  border-top: 2px solid #f0f0f0; /* Clearer border */
+  height: 6.5rem;
+  background: #ffffff;
+  border-top: 3px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
   z-index: 999;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
 }
 
 .nav-item {
@@ -172,12 +179,17 @@ const handleNavClick = (item) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #888; /* Standard grey */
+  color: var(--text-light);
   transition: all 0.2s ease;
   flex: 1;
   height: 100%;
   cursor: pointer;
-  padding-bottom: 5px;
+  padding-bottom: 0.25rem;
+  min-width: 4rem;
+}
+
+.nav-item:hover {
+  color: var(--text-secondary);
 }
 
 .nav-item.active {
@@ -185,39 +197,53 @@ const handleNavClick = (item) => {
   font-weight: bold;
 }
 
+.nav-item:focus {
+  outline: none;
+  background: var(--bg-hover);
+}
+
 .icon-wrapper {
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .nav-label {
-  font-size: 1rem; /* 16px - clearly readable */
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 /* Special styling for the middle "Ask" button */
 .nav-special {
   position: relative;
-  top: -20px; /* Pop out effect */
+  top: -24px;
 }
 
 .nav-special .icon-wrapper {
   background: var(--primary-gradient);
-  width: 3.8rem;
-  height: 3.8rem;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
   color: white;
-  box-shadow: 0 8px 15px rgba(255, 94, 98, 0.4);
-  border: 4px solid white; /* Thicker white border */
+  box-shadow: 0 8px 20px rgba(255, 82, 82, 0.4);
+  border: 4px solid white;
 }
 
 .nav-special .nav-label {
-  margin-top: 6px;
+  margin-top: 0.5rem;
   color: var(--text-main);
-  font-weight: 800;
+  font-weight: 900;
+  font-size: 1.125rem;
+}
+
+.nav-special:hover .icon-wrapper {
+  transform: scale(1.05);
+}
+
+.nav-special:active .icon-wrapper {
+  transform: scale(0.95);
 }
 
 .toast {
@@ -225,18 +251,19 @@ const handleNavClick = (item) => {
   top: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: #333;
+  background: var(--text-main);
   color: white;
-  padding: 12px 24px;
-  border-radius: 50px;
-  font-size: 1.1rem; /* Larger font */
-  font-weight: 500;
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
   z-index: 2000;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   display: flex;
   align-items: center;
   max-width: 90%;
   text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 

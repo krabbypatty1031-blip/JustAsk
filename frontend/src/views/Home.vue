@@ -52,6 +52,22 @@ const toggleFontSize = () => {
   showToast(`字體已調整為：${labels[fontSizeLevel.value]}`)
 }
 
+const highContrastMode = ref(false)
+
+const toggleHighContrast = () => {
+  highContrastMode.value = !highContrastMode.value
+  
+  if (highContrastMode.value) {
+    document.body.classList.add('high-contrast-mode')
+    localStorage.setItem('high_contrast', 'true')
+    showToast('已開啟高對比模式', 'info')
+  } else {
+    document.body.classList.remove('high-contrast-mode')
+    localStorage.setItem('high_contrast', 'false')
+    showToast('已關閉高對比模式', 'info')
+  }
+}
+
 const handleLogout = async () => {
   if (!confirm('確定要登出嗎？')) return
   try {
@@ -83,40 +99,56 @@ onMounted(() => {
 
 <template>
   <div class="home-view">
-    <!-- 頂部 Header -->
+      <!-- 頂部 Header -->
     <header class="home-header">
       <div class="header-content">
         <h1 class="app-title">吾識JustAsk</h1>
         <div class="header-actions">
            <!-- Font Size Toggle -->
-           <button class="btn-font-toggle" @click="toggleFontSize" aria-label="調整字體大小">
-             <span class="font-icon" :class="'level-' + fontSizeLevel">Aa</span>
-           </button>
+           <button 
+             class="btn-font-toggle" 
+             @click="toggleFontSize" 
+             aria-label="調整字體大小"
+             :aria-pressed="false"
+           >
+              <span class="font-icon" :class="'level-' + fontSizeLevel">Aa</span>
+            </button>
 
-           <!-- 如果已登入，顯示小頭像（模擬） -->
-           <div class="avatar-container" v-if="currentUser">
-             <img 
-               :src="getAvatarUrl(currentUser.username)" 
-               class="user-avatar-small" 
-               @click="toggleUserMenu"
-               alt="Me"
-             />
-             <!-- Dropdown Menu -->
-             <transition name="fade">
-               <div v-if="showUserMenu" class="user-dropdown">
-                 <div class="menu-item" @click="goToProfile">
-                   <span>👤</span> 我的檔案
-                 </div>
-                 <div class="menu-divider"></div>
-                 <div class="menu-item logout" @click="handleLogout">
-                   <span>🚪</span> 退出登入
-                 </div>
-               </div>
-             </transition>
-           </div>
-           <button v-else class="btn-login-sm" @click="router.push('/login')">
-             登入
-           </button>
+           <!-- High Contrast Toggle -->
+           <button 
+             class="btn-contrast-toggle" 
+             @click="toggleHighContrast" 
+             aria-label="切換高對比模式"
+             :aria-pressed="highContrastMode"
+             :class="{ active: highContrastMode }"
+           >
+              <span>👁</span>
+            </button>
+
+            <!-- 如果已登入，顯示小頭像（模擬） -->
+            <div class="avatar-container" v-if="currentUser">
+              <img 
+                :src="getAvatarUrl(currentUser.username)" 
+                class="user-avatar-small" 
+                @click="toggleUserMenu"
+                alt="Me"
+              />
+              <!-- Dropdown Menu -->
+              <transition name="fade">
+                <div v-if="showUserMenu" class="user-dropdown">
+                  <div class="menu-item" @click="goToProfile">
+                    <span>👤</span> 我的檔案
+                  </div>
+                  <div class="menu-divider"></div>
+                  <div class="menu-item logout" @click="handleLogout">
+                    <span>🚪</span> 退出登入
+                  </div>
+                </div>
+              </transition>
+            </div>
+            <button v-else class="btn-login-sm" @click="router.push('/login')">
+              登入
+            </button>
         </div>
       </div>
       
@@ -148,18 +180,18 @@ onMounted(() => {
 
 .home-header {
   background: #fff;
-  padding: 20px 20px 10px 20px;
-  border-bottom-left-radius: 30px;
-  border-bottom-right-radius: 30px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-  margin-bottom: 20px;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom-left-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .header-actions {
@@ -168,38 +200,44 @@ onMounted(() => {
 }
 
 .app-title {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 
 .user-avatar-small {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   background: #fff;
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .btn-font-toggle {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: white;
-  border: 1px solid #eee;
+  border: 2px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin-right: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-right: 1rem;
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s;
+}
+
+.btn-font-toggle:hover,
+.btn-font-toggle:focus {
+  border-color: var(--primary-color);
+  transform: scale(1.05);
 }
 
 .btn-font-toggle:active {
@@ -209,72 +247,124 @@ onMounted(() => {
 
 .font-icon {
   font-family: serif;
-  color: #333;
+  color: var(--text-main);
   line-height: 1;
   transition: all 0.2s;
 }
 
 /* Visual indicators for levels */
-.font-icon.level-0 { font-size: 1rem; font-weight: normal; }
-.font-icon.level-1 { font-size: 1.25rem; font-weight: 600; }
-.font-icon.level-2 { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
+.font-icon.level-0 { font-size: 1.125rem; font-weight: 600; }
+.font-icon.level-1 { font-size: 1.375rem; font-weight: 700; }
+.font-icon.level-2 { font-size: 1.75rem; font-weight: 900; color: var(--primary-color); }
+
+.btn-contrast-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+  font-size: 1.5rem;
+}
+
+.btn-contrast-toggle:hover,
+.btn-contrast-toggle:focus {
+  border-color: var(--primary-color);
+  transform: scale(1.05);
+}
+
+.btn-contrast-toggle:active {
+  transform: scale(0.95);
+  background: #f5f5f5;
+}
+
+.btn-contrast-toggle.active {
+  background: var(--text-main);
+  color: white;
+  border-color: var(--text-main);
+}
 
 .btn-login-sm {
-  padding: 8px 16px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 20px;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border-color);
+  border-radius: 1.5rem;
   font-weight: bold;
-  color: #333;
+  font-size: 1.125rem;
+  color: var(--text-main);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-login-sm:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: white;
 }
 
 .welcome-card {
   background: var(--primary-gradient);
-  border-radius: 24px;
-  padding: 24px;
+  border-radius: 2rem;
+  padding: 2rem;
   color: white;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(255, 94, 98, 0.3);
+  box-shadow: 0 12px 30px rgba(255, 82, 82, 0.35);
 }
 
 .welcome-text h2 {
-  font-size: 1.375rem;
-  margin-bottom: 5px;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  font-weight: 800;
 }
+
 .welcome-text p {
-  opacity: 0.9;
-  font-size: 0.875rem;
+  opacity: 0.95;
+  font-size: 1.125rem;
+  font-weight: 500;
 }
 
 .decoration {
   position: absolute;
   right: -10px;
   bottom: -20px;
-  font-size: 5rem;
-  opacity: 0.2;
+  font-size: 6rem;
+  opacity: 0.25;
   transform: rotate(15deg);
 }
 
 .section-header {
-  padding: 0 24px;
-  margin-bottom: 15px;
+  padding: 0 1.5rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .section-header h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--text-main);
 }
 
 .refresh-icon {
-  font-size: 18px;
+  font-size: 1.5rem;
   color: var(--text-secondary);
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.refresh-icon:hover {
+  background: var(--bg-input);
+  color: var(--text-main);
 }
 
 /* Dropdown Menu Styles */
@@ -284,54 +374,56 @@ onMounted(() => {
 
 .user-dropdown {
   position: absolute;
-  top: 50px;
+  top: 60px;
   right: 0;
   background: white;
-  min-width: 150px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  padding: 8px 0;
+  min-width: 180px;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  padding: 0.75rem 0;
   z-index: 1000;
-  border: 1px solid #f0f0f0;
+  border: 2px solid var(--border-color);
 }
 
 /* Little arrow pointer */
 .user-dropdown::before {
   content: '';
   position: absolute;
-  top: -6px;
-  right: 14px;
-  width: 12px;
-  height: 12px;
+  top: -8px;
+  right: 16px;
+  width: 16px;
+  height: 16px;
   background: white;
   transform: rotate(45deg);
-  border-left: 1px solid #f0f0f0;
-  border-top: 1px solid #f0f0f0;
+  border-left: 2px solid var(--border-color);
+  border-top: 2px solid var(--border-color);
 }
 
 .menu-item {
-  padding: 12px 16px;
+  padding: 0.875rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #333;
-  font-size: 15px;
+  gap: 0.75rem;
+  color: var(--text-main);
+  font-size: 1.125rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .menu-item:hover {
-  background: #f8f9fa;
+  background: var(--bg-hover);
 }
 
 .menu-item.logout {
-  color: #ff4d4f;
+  color: var(--error-color);
+  font-weight: 600;
 }
 
 .menu-divider {
-  height: 1px;
-  background: #f0f0f0;
-  margin: 4px 0;
+  height: 2px;
+  background: var(--border-color);
+  margin: 0.5rem 0;
 }
 
 /* Dropdown Transition */

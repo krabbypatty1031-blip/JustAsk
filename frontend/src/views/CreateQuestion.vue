@@ -173,102 +173,113 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f5f5f5;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid var(--border-color);
   background: #fff;
 }
 
-.title { font-weight: 700; font-size: 1.125rem; }
+.title { font-weight: 800; font-size: 1.25rem; }
 
 .text-btn {
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 1.125rem;
   cursor: pointer;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
 }
 
-.text-btn.cancel { color: #999; }
-.text-btn.submit { color: var(--primary-color); font-weight: bold; }
-.text-btn:disabled { opacity: 0.5; }
+.text-btn.cancel { color: var(--text-secondary); }
+.text-btn.cancel:hover { background: var(--bg-input); }
+.text-btn.submit { color: var(--primary-color); font-weight: 700; }
+.text-btn.submit:hover { background: #FFF5F5; }
+.text-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .form-area {
-  padding: 1.25rem;
+  padding: 1.5rem;
 }
 
 .input-title {
   width: 100%;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.75rem;
+  font-weight: 800;
   border: none;
   outline: none;
-  padding: 0.625rem 0;
-  color: #333;
+  padding: 1rem 0;
+  color: var(--text-main);
 }
-.input-title::placeholder { color: #ccc; }
+.input-title::placeholder { color: var(--text-light); }
+.input-title:focus {
+  outline: none;
+}
 
 .divider {
-  height: 1px;
-  background: #f0f0f0;
-  margin: 0.625rem 0 1.25rem;
+  height: 2px;
+  background: var(--border-color);
+  margin: 1rem 0 1.5rem;
 }
 
 .input-content {
   width: 100%;
-  height: 18.75rem;
+  height: 20rem;
   border: none;
   outline: none;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   line-height: 1.6;
   resize: none;
-  color: #333;
+  color: var(--text-main);
 }
-.input-content::placeholder { color: #ccc; }
+.input-content::placeholder { color: var(--text-light); }
+.input-content:focus {
+  outline: none;
+}
 
 /* Speech Button Styles */
 .speech-wrapper {
   position: fixed;
-  bottom: 9rem; /* Further raised to clear larger bottom nav */
-  /* Fix: Align with the app container (max-width: 30rem) */
+  bottom: 9.5rem;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 30rem;
   
-  /* Layout: Position items to the bottom center */
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-right: 0;
   
   z-index: 100;
-  pointer-events: none; /* Allow clicks to pass through the wrapper */
+  pointer-events: none;
 }
 
 .listening-tip, .speech-btn {
-  pointer-events: auto; /* Re-enable clicks for the button and tip */
+  pointer-events: auto;
 }
 
 .listening-tip {
-  background: rgba(0,0,0,0.7);
+  background: var(--text-main);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
-  margin-bottom: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
   animation: fadeIn 0.3s;
-  /* Prevent tip from being too wide */
   max-width: 80%;
   text-align: center;
+  box-shadow: var(--shadow-md);
 }
 
 .speech-btn {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 2rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
   background: var(--primary-color);
   color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(255, 94, 98, 0.4);
+  border: 3px solid white;
+  box-shadow: 0 8px 20px rgba(255, 82, 82, 0.4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -277,15 +288,25 @@ const handleSubmit = async () => {
   transition: all 0.3s ease;
 }
 
+.speech-btn:hover,
+.speech-btn:focus {
+  transform: scale(1.05);
+  outline: none;
+}
+
+.speech-btn:active {
+  transform: scale(0.95);
+}
+
 .mic-icon {
-  font-size: 1.75rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
 .btn-text {
-  font-size: 0.7rem;
-  margin-top: 0.2rem;
-  font-weight: bold;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 700;
 }
 
 /* Animation for listening state */
@@ -307,7 +328,7 @@ const handleSubmit = async () => {
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 20px rgba(255, 59, 48, 0);
+    box-shadow: 0 0 0 25px rgba(255, 59, 48, 0);
   }
   100% {
     transform: scale(0.95);

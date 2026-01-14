@@ -1,44 +1,66 @@
 :root {
-  /* --- 核心色彩系統 (Warm & Vibrant) --- */
-  --primary-gradient: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
-  --primary-color: #FF5E62;
-  --secondary-color: #4CB8C4;
-  --accent-color: #FFD200;
+  /* --- 高對比色彩系統 (Elderly-Friendly) --- */
+  --primary-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+  --primary-color: #FF5252;
+  --primary-hover: #FF3D3D;
+  --secondary-color: #2196F3;
+  --success-color: #4CAF50;
+  --error-color: #F44336;
+  --warning-color: #FF9800;
   
-  --bg-body: #F7F8FA;
+  /* High contrast text colors (WCAG AAA compliant where possible) */
+  --text-main: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-light: #888888;
+  
+  /* High contrast backgrounds */
+  --bg-body: #FFFFFF;
   --bg-card: #FFFFFF;
-  --text-main: #1A1A1A;
-  --text-secondary: #858E96;
-  --border-light: #F0F0F0;
+  --bg-input: #F5F5F5;
+  --bg-hover: #FAFAFA;
   
-  /* --- 陰影與層級 --- */
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
-  --shadow-lg: 0 16px 32px rgba(255, 94, 98, 0.15);
+  /* Clear borders */
+  --border-color: #DDDDDD;
+  --border-focus: #FF5252;
+  --border-active: #2196F3;
   
-  /* --- 字體策略 (Relative Units) --- */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* --- 陰影與層級 (Enhanced for better depth perception) --- */
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.16);
+  --shadow-focus: 0 0 0 3px rgba(255, 82, 82, 0.3);
   
-  /* 定義全局縮放基準，默認 100% (16px) */
-  --app-scale: 100%;
+  /* --- 字體策略 (Larger base for elderly) --- */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* 定義全局縮放基準，默認 112.5% (18px base) */
+  --app-scale: 112.5%;
 
-  /* 基於 rem 的字體變量，隨 html font-size 自動縮放 */
-  --font-xs: 0.75rem;    /* ~12px */
-  --font-sm: 0.875rem;   /* ~14px */
-  --font-base: 1rem;     /* ~16px */
-  --font-lg: 1.25rem;    /* ~20px */
-  --font-xl: 1.75rem;    /* ~28px */
-  --font-xxl: 2.125rem;  /* ~34px */
+  /* 基於 rem 的字體變量 - Larger scale for elderly users */
+  --font-xs: 0.875rem;   /* ~15.75px */
+  --font-sm: 1rem;       /* ~18px */
+  --font-base: 1.125rem; /* ~20.25px */
+  --font-lg: 1.375rem;   /* ~24.75px */
+  --font-xl: 1.75rem;    /* ~31.5px */
+  --font-xxl: 2.25rem;   /* ~40.5px */
 
-  /* --- 尺寸與間距 (也使用 rem 以便隨字體縮放) --- */
-  --radius-sm: 0.75rem;
-  --radius-md: 1.25rem;
-  --radius-lg: 2rem;
+  /* --- 尺寸與間距 (Larger spacing for better readability) --- */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
   
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1.25rem;
-  --spacing-lg: 1.875rem;
+  --spacing-xs: 0.75rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  
+  /* Touch targets (minimum 48px) */
+  --touch-target: 3rem;
+  --touch-target-lg: 3.5rem;
+  
+  /* High contrast mode support */
+  --high-contrast: 0;
 }
 
 /* --- 全局重置 --- */
@@ -50,26 +72,26 @@
 html {
   /* 核心：設置根字體大小為變量，實現全局縮放 */
   font-size: var(--app-scale);
-  transition: font-size 0.3s ease; /* 縮放時的平滑過渡 */
+  transition: font-size 0.3s ease;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #EEF2F5;
+  background-color: #F5F5F5;
   color: var(--text-main);
   font-size: var(--font-base);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
 }
 
 #app {
-  max-width: 30rem; /* 480px / 16 = 30rem */
+  max-width: 30rem;
   margin: 0 auto;
   min-height: 100vh;
   background-color: var(--bg-body);
   position: relative;
-  box-shadow: 0 0 50px rgba(0,0,0,0.05);
+  box-shadow: 0 0 50px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
 }
@@ -79,88 +101,305 @@ h1, h2, h3, p { margin: 0; }
 a { text-decoration: none; color: inherit; }
 ul, li { list-style: none; padding: 0; margin: 0; }
 
-/* --- 組件：按鈕 --- */
+/* --- 組件：按鈕 (Elderly-Friendly) --- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.875rem 1.5rem; /* ~14px 24px */
-  border-radius: var(--radius-lg);
+  padding: 1rem 2rem;
+  border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 1.125rem; /* ~18px */
+  font-size: 1.125rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 3.125rem; /* ~50px, 確保可點擊 */
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
   user-select: none;
+  position: relative;
 }
 
-.btn:active { transform: scale(0.96); }
+.btn:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .btn-primary {
   background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 4px 15px rgba(255, 94, 98, 0.3);
+  box-shadow: var(--shadow-md);
+  border: 2px solid transparent;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn-outline {
   background: transparent;
-  border: 2px solid var(--primary-color);
+  border: 3px solid var(--primary-color);
   color: var(--primary-color);
+  font-weight: 700;
 }
 
-.btn-block { width: 100%; }
+.btn-outline:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+}
 
-/* --- 組件：卡片 --- */
+.btn-success {
+  background: var(--success-color);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+  background: var(--error-color);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-lg {
+  padding: 1.25rem 2.5rem;
+  min-height: var(--touch-target-lg);
+  font-size: 1.25rem;
+}
+
+.btn-sm {
+  padding: 0.75rem 1.5rem;
+  min-height: 2.5rem;
+  font-size: 1rem;
+}
+
+/* --- 組件：卡片 (Elderly-Friendly) --- */
 .card {
   background: var(--bg-card);
   border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  padding: 1.5rem;
   margin-bottom: var(--spacing-md);
   box-shadow: var(--shadow-sm);
-  border: none;
+  border: 2px solid var(--border-color);
 }
 
-/* --- 組件：輸入框 --- */
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* --- 組件：輸入框 (Elderly-Friendly) --- */
 .input-group {
   margin-bottom: var(--spacing-md);
 }
 
+.input-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--text-main);
+}
+
 .input-field {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 1.125rem 1.375rem;
   font-size: 1.125rem;
-  background: #F2F4F8;
-  border: 2px solid transparent;
+  background: var(--bg-input);
+  border: 3px solid transparent;
   border-radius: var(--radius-md);
   color: var(--text-main);
-  transition: all 0.3s;
+  transition: all 0.2s;
+  min-height: var(--touch-target);
+}
+
+.input-field::placeholder {
+  color: var(--text-light);
 }
 
 .input-field:focus {
   background: #fff;
   border-color: var(--primary-color);
   outline: none;
+  box-shadow: var(--shadow-focus);
 }
 
-/* --- 動畫 --- */
+.input-field:disabled {
+  background: #E0E0E0;
+  cursor: not-allowed;
+}
+
+.input-error {
+  border-color: var(--error-color);
+  background: #FFF5F5;
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+/* --- 動畫 (Subtle for elderly users) --- */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(1.25rem); }
+  from { opacity: 0; transform: translateY(1rem); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
 
 /* Vue Transitions */
 .page-enter-active, .page-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.page-enter-from { opacity: 0; transform: translateX(1.25rem); }
-.page-leave-to { opacity: 0; transform: translateX(-1.25rem); }
+.page-enter-from { opacity: 0; transform: translateY(0.5rem); }
+.page-leave-to { opacity: 0; transform: translateY(-0.5rem); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 0px; background: transparent; }
+/* Scrollbar (Visible for easier scrolling) */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F0F0F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CCCCCC;
+  border-radius: 6px;
+  border: 3px solid #F0F0F0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999999;
+}
+
+/* --- Accessible Focus States --- */
+:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* --- Link Styles --- */
+a {
+  color: var(--primary-color);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* --- Loading Spinner --- */
+.spinner {
+  border: 4px solid #E0E0E0;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- High Contrast Mode Support --- */
+.high-contrast-mode {
+  --primary-color: #FF0000;
+  --text-main: #000000;
+  --text-secondary: #000000;
+  --text-muted: #000000;
+  --text-light: #000000;
+  --bg-body: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-hover: #000000;
+  --border-color: #000000;
+  --border-focus: #FF0000;
+  --border-active: #000000;
+  --primary-gradient: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.5);
+  --shadow-focus: 0 0 0 4px rgba(255, 0, 0, 0.5);
+}
+
+.high-contrast-mode .btn {
+  border: 3px solid #000000;
+  font-weight: 800;
+}
+
+.high-contrast-mode .btn-primary {
+  background: #000000;
+  color: #FFFFFF;
+  border: 3px solid #FFFFFF;
+}
+
+.high-contrast-mode .btn-outline {
+  background: #FFFFFF;
+  color: #000000;
+  border: 3px solid #000000;
+}
+
+.high-contrast-mode .card {
+  border: 3px solid #000000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.high-contrast-mode .input-field {
+  background: #FFFFFF;
+  border: 3px solid #000000;
+  color: #000000;
+}
+
+.high-contrast-mode .input-field:focus {
+  border-color: #FF0000;
+  box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.3);
+}
+
+.high-contrast-mode a {
+  color: #FF0000;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  font-weight: 800;
+}
+
+@media (prefers-contrast: high) {
+  :root {
+    --primary-color: #FF0000;
+    --text-secondary: #000000;
+    --border-color: #000000;
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+    --shadow-lg: 0 16px 40px rgba(0,0,0,0.5);
+  }
+  
+  .btn {
+    border: 3px solid;
+  }
+}
