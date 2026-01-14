@@ -52,22 +52,6 @@ const toggleFontSize = () => {
   showToast(`字體已調整為：${labels[fontSizeLevel.value]}`)
 }
 
-const highContrastMode = ref(false)
-
-const toggleHighContrast = () => {
-  highContrastMode.value = !highContrastMode.value
-  
-  if (highContrastMode.value) {
-    document.body.classList.add('high-contrast-mode')
-    localStorage.setItem('high_contrast', 'true')
-    showToast('已開啟高對比模式', 'info')
-  } else {
-    document.body.classList.remove('high-contrast-mode')
-    localStorage.setItem('high_contrast', 'false')
-    showToast('已關閉高對比模式', 'info')
-  }
-}
-
 const handleLogout = async () => {
   if (!confirm('確定要登出嗎？')) return
   try {
@@ -112,17 +96,6 @@ onMounted(() => {
              :aria-pressed="false"
            >
               <span class="font-icon" :class="'level-' + fontSizeLevel">Aa</span>
-            </button>
-
-           <!-- High Contrast Toggle -->
-           <button 
-             class="btn-contrast-toggle" 
-             @click="toggleHighContrast" 
-             aria-label="切換高對比模式"
-             :aria-pressed="highContrastMode"
-             :class="{ active: highContrastMode }"
-           >
-              <span>👁</span>
             </button>
 
             <!-- 如果已登入，顯示小頭像（模擬） -->
@@ -224,7 +197,7 @@ onMounted(() => {
   height: 48px;
   border-radius: 50%;
   background: white;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,42 +226,9 @@ onMounted(() => {
 }
 
 /* Visual indicators for levels */
-.font-icon.level-0 { font-size: 1.125rem; font-weight: 600; }
-.font-icon.level-1 { font-size: 1.375rem; font-weight: 700; }
-.font-icon.level-2 { font-size: 1.75rem; font-weight: 900; color: var(--primary-color); }
-
-.btn-contrast-toggle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-right: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s;
-  font-size: 1.5rem;
-}
-
-.btn-contrast-toggle:hover,
-.btn-contrast-toggle:focus {
-  border-color: var(--primary-color);
-  transform: scale(1.05);
-}
-
-.btn-contrast-toggle:active {
-  transform: scale(0.95);
-  background: #f5f5f5;
-}
-
-.btn-contrast-toggle.active {
-  background: var(--text-main);
-  color: white;
-  border-color: var(--text-main);
-}
+.font-icon.level-0 { font-size: 1rem; font-weight: 600; }
+.font-icon.level-1 { font-size: 1.125rem; font-weight: 700; }
+.font-icon.level-2 { font-size: 1.25rem; font-weight: 900; color: var(--primary-color); }
 
 .btn-login-sm {
   padding: 0.75rem 1.5rem;

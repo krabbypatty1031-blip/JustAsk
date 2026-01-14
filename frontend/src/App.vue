@@ -41,18 +41,9 @@ const initFontSize = () => {
   }
 }
 
-// 初始化高對比模式
-const initHighContrast = () => {
-  const savedHighContrast = localStorage.getItem('high_contrast')
-  if (savedHighContrast === 'true') {
-    document.body.classList.add('high-contrast-mode')
-  }
-}
-
 onMounted(() => {
   checkStatus()
   initFontSize()
-  initHighContrast()
 })
 
 const navItems = [
@@ -164,7 +155,7 @@ const handleNavClick = (item) => {
   max-width: 30rem;
   height: 6.5rem;
   background: #ffffff;
-  border-top: 3px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;

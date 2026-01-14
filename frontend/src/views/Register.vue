@@ -72,69 +72,65 @@ const handleRegister = async () => {
           required
         />
       </div>
-      <div class="input-group" style="position: relative;">
+      <div class="input-group">
         <label for="reg-password" class="input-label">密碼</label>
-        <input 
-          id="reg-password"
-          v-model="form.password" 
-          :type="isPasswordVisible ? 'text' : 'password'" 
-          class="input-field" 
-          placeholder="請設定您的密碼"
-          aria-label="密碼"
-          autocomplete="new-password"
-          required
-        />
-        <button 
-          type="button"
-          class="password-toggle"
-          @click="isPasswordVisible = !isPasswordVisible"
-          :aria-label="isPasswordVisible ? '隱藏密碼' : '顯示密碼'"
-          :aria-pressed="isPasswordVisible"
-        >
-          <div class="toggle-content">
-            <svg v-if="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="input-wrapper">
+          <input 
+            id="reg-password"
+            v-model="form.password" 
+            :type="isPasswordVisible ? 'text' : 'password'" 
+            class="input-field" 
+            placeholder="請設定您的密碼"
+            aria-label="密碼"
+            autocomplete="new-password"
+            required
+          />
+          <button 
+            type="button"
+            class="password-toggle-icon"
+            @click="isPasswordVisible = !isPasswordVisible"
+            :aria-label="isPasswordVisible ? '隱藏密碼' : '顯示密碼'"
+          >
+            <svg v-if="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
               <line x1="1" y1="1" x2="23" y2="23"></line>
             </svg>
-            <span>{{ isPasswordVisible ? '隱藏' : '顯示' }}</span>
-          </div>
-        </button>
+          </button>
+        </div>
       </div>
-      <div class="input-group" style="position: relative;">
+      <div class="input-group">
         <label for="reg-confirm-password" class="input-label">確認密碼</label>
-        <input 
-          id="reg-confirm-password"
-          v-model="form.confirmPassword" 
-          :type="isConfirmPasswordVisible ? 'text' : 'password'" 
-          class="input-field" 
-          placeholder="請再次輸入密碼"
-          aria-label="確認密碼"
-          autocomplete="new-password"
-          required
-        />
-        <button 
-          type="button"
-          class="password-toggle"
-          @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
-          :aria-label="isConfirmPasswordVisible ? '隱藏確認密碼' : '顯示確認密碼'"
-          :aria-pressed="isConfirmPasswordVisible"
-        >
-          <div class="toggle-content">
-            <svg v-if="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="input-wrapper">
+          <input 
+            id="reg-confirm-password"
+            v-model="form.confirmPassword" 
+            :type="isConfirmPasswordVisible ? 'text' : 'password'" 
+            class="input-field" 
+            placeholder="請再次輸入密碼"
+            aria-label="確認密碼"
+            autocomplete="new-password"
+            required
+          />
+          <button 
+            type="button"
+            class="password-toggle-icon"
+            @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+            :aria-label="isConfirmPasswordVisible ? '隱藏確認密碼' : '顯示確認密碼'"
+          >
+            <svg v-if="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
               <line x1="1" y1="1" x2="23" y2="23"></line>
             </svg>
-            <span>{{ isConfirmPasswordVisible ? '隱藏' : '顯示' }}</span>
-          </div>
-        </button>
+          </button>
+        </div>
       </div>
 
       <button 
@@ -214,39 +210,38 @@ const handleRegister = async () => {
 .auth-footer {
   margin-top: 2.5rem;
   text-align: center;
-  font-size: 1.125rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
 }
 
-.password-toggle {
+.input-wrapper {
+  position: relative;
+}
+
+.password-toggle-icon {
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--bg-input);
-  border: 2px solid var(--border-color);
+  background: transparent;
+  border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  padding: 0.5rem;
   display: flex;
   align-items: center;
-  border-radius: 1rem;
-  min-height: 2.75rem;
+  justify-content: center;
+  border-radius: 50%;
   transition: all 0.2s;
-  font-weight: 600;
-  font-size: 1rem;
 }
 
-.password-toggle:hover,
-.password-toggle:focus {
+.password-toggle-icon:hover {
   color: var(--primary-color);
   background: var(--bg-hover);
-  border-color: var(--primary-color);
-  outline: none;
 }
 
-.toggle-content {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.password-toggle-icon:focus {
+  outline: none;
+  color: var(--primary-color);
 }
 </style>
