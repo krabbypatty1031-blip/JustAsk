@@ -102,6 +102,20 @@ const submitAnswer = async () => {
   }
 }
 
+const handleThank = async (answer) => {
+  // Optimistic update
+  if (!answer.thanks) answer.thanks = 0
+  answer.thanks++
+  
+  try {
+    await axios.post(`/questions/${question.value._id}/answers/${answer._id}/thank`)
+    showToast('已發送感謝！', 'success')
+  } catch (e) {
+    answer.thanks-- // Revert on error
+    showToast('操作失敗', 'error')
+  }
+}
+
 onMounted(() => {
   fetchQuestion()
 })
@@ -194,8 +208,8 @@ onMounted(() => {
               </button>
               
               <!-- Placeholder for future 'Like' feature -->
-              <button class="action-btn like-btn">
-                <span class="icon">👍</span> 謝謝
+              <button class="action-btn like-btn" @click="handleThank(answer)">
+                <span class="icon">👍</span> 謝謝 {{ answer.thanks ? `(${answer.thanks})` : '' }}
               </button>
             </div>
           </div>

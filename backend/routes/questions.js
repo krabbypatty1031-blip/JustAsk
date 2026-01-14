@@ -64,7 +64,15 @@ router.get('/:id', async function(req, res) {
   let db;
   try {
     db = await connectToDB();
-    const question = await db.collection('Questions').findOne({ _id: new ObjectId(req.params.id) });
+    const questionId = new ObjectId(req.params.id);
+
+    // Increment view count
+    await db.collection('Questions').updateOne(
+      { _id: questionId },
+      { $inc: { views: 1 } }
+    );
+
+    const question = await db.collection('Questions').findOne({ _id: questionId });
     if (!question) {
       return res.status(404).json({ success: false, message: '找不到該問題' });
     }
@@ -72,6 +80,32 @@ router.get('/:id', async function(req, res) {
   } catch (err) {
     console.error('Error in GET /questions/:id:', err);
     res.status(500).json({ success: false, message: '獲取問題詳情失敗' });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
+// POST /questions/:id/answers/:answerId/thank - Increment thanks count for an answer
+router.post('/:id/answers/:answerId/thank', async function(req, res) {
+  let db;
+  try {
+    db = await connectToDB();
+    const questionId = new ObjectId(req.params.id);
+    const answerId = new ObjectId(req.params.answerId);
+
+    const result = await db.collection('Questions').updateOne(
+      { _id: questionId, "answers._id": answerId },
+      { $inc: { "answers.$.thanks": 1 } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ success: false, message: '找不到該回答' });
+    }
+
+    res.json({ success: true, message: '感谢成功' });
+  } catch (err) {
+    console.error('Error in POST /thank:', err);
+    res.status(500).json({ success: false, message: '操作失敗' });
   } finally {
     if (db) await db.client.close();
   }
