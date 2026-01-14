@@ -122,66 +122,81 @@ onMounted(() => {
 
     <div v-else-if="question" class="content-wrapper">
       
-      <!-- Question Card (OP) -->
-      <div class="question-header-card">
-        <div class="title-row">
-          <h1 class="title">{{ question.title }}</h1>
+      <!-- Question Card (OP) - Warm Theme -->
+      <div class="question-card">
+        <div class="card-header">
+          <img :src="getAvatarUrl(question.author.username)" class="avatar-lg" alt="avatar" />
+          <div class="user-meta">
+            <span class="username">{{ question.author.username }}</span>
+            <span class="post-time">{{ new Date(question.createdAt).toLocaleString() }}</span>
+          </div>
           <button 
-            class="btn-speak-main" 
+            class="btn-speak-icon" 
             @click="handleToggleSpeech(`${question.title}。${question.content}`, 'question')"
             :class="{ 'is-speaking': isSpeakingId === 'question' }"
+            :aria-label="isSpeakingId === 'question' ? '停止朗讀' : '朗讀問題'"
           >
-            <span v-if="isSpeakingId === 'question'">🛑 停止</span>
-            <span v-else>🔊 聽粵語</span>
+            <span class="icon">{{ isSpeakingId === 'question' ? '🛑' : '🔊' }}</span>
+            <span class="label">{{ isSpeakingId === 'question' ? '停止' : '聽問題' }}</span>
           </button>
         </div>
-        <div class="author-row">
-          <img :src="getAvatarUrl(question.author.username)" class="avatar" alt="avatar" />
-          <div class="info">
-            <span class="name">{{ question.author.username }}</span>
-            <span class="date">{{ new Date(question.createdAt).toLocaleString() }}</span>
-          </div>
-        </div>
-        <div class="body-text">
+        
+        <h1 class="question-title">{{ question.title }}</h1>
+        
+        <div class="question-body" :class="{ 'highlight-read': isSpeakingId === 'question' }">
           {{ question.content }}
         </div>
-        <!-- Reply Button inside Card -->
-        <div class="card-actions">
-          <button class="reply-btn-outline" @click="openReplyModal">
-            💬 回覆這個問題
-          </button>
+
+        <div class="question-footer">
+          <div class="stats">
+            <span>👁 {{ question.views || 0 }} 次瀏覽</span>
+            <span>💬 {{ question.answers.length }} 條回答</span>
+          </div>
         </div>
       </div>
 
-      <!-- Answers List (Chat Style) -->
-      <div class="answers-area" ref="answersContainer">
-        <div class="divider">
-          <span>共 {{ question.answers.length }} 條回覆</span>
+      <!-- Answers List -->
+      <div class="answers-section" ref="answersContainer">
+        <div class="section-divider">
+          <span class="divider-label">大家的回答</span>
         </div>
 
         <transition-group name="list">
           <div 
             v-for="answer in question.answers" 
             :key="answer._id" 
-            class="answer-item"
-            :class="{ 'mine': currentUser && answer.author.username === currentUser.username }"
+            class="answer-card"
+            :class="{ 
+              'mine': currentUser && answer.author.username === currentUser.username,
+              'highlight-read': isSpeakingId === answer._id
+            }"
           >
-            <img :src="getAvatarUrl(answer.author.username)" class="answer-avatar" alt="avatar" />
-            <div class="answer-bubble">
-              <div class="answer-name" v-if="!(currentUser && answer.author.username === currentUser.username)">
-                {{ answer.author.username }}
+            <div class="answer-header">
+              <div class="user-info">
+                <img :src="getAvatarUrl(answer.author.username)" class="avatar-sm" alt="avatar" />
+                <span class="answer-username">{{ answer.author.username }}</span>
               </div>
-              <p>{{ answer.content }}</p>
-              <div class="bubble-footer">
-                <button 
-                  class="btn-speak-sm" 
-                  @click="handleToggleSpeech(answer.content, answer._id)"
-                  :class="{ 'is-active': isSpeakingId === answer._id }"
-                >
-                  {{ isSpeakingId === answer._id ? '🛑' : '🔊' }}
-                </button>
-                <span class="answer-time">{{ new Date(answer.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
-              </div>
+              <span class="answer-time">{{ new Date(answer.createdAt).toLocaleDateString() }}</span>
+            </div>
+            
+            <div class="answer-content">
+              {{ answer.content }}
+            </div>
+
+            <div class="answer-actions">
+              <button 
+                class="action-btn speak-btn" 
+                @click="handleToggleSpeech(answer.content, answer._id)"
+                :class="{ 'active': isSpeakingId === answer._id }"
+              >
+                <span class="icon">{{ isSpeakingId === answer._id ? '🛑' : '🔊' }}</span>
+                {{ isSpeakingId === answer._id ? '停止' : '聽回答' }}
+              </button>
+              
+              <!-- Placeholder for future 'Like' feature -->
+              <button class="action-btn like-btn">
+                <span class="icon">👍</span> 謝謝
+              </button>
             </div>
           </div>
         </transition-group>
@@ -191,31 +206,49 @@ onMounted(() => {
 
     </div>
 
-    <!-- Reply Modal Overlay -->
-    <div v-if="showReplyModal" class="modal-mask" @click.self="showReplyModal = false">
-      <div class="modal-container">
-        <h3>撰寫回覆</h3>
-        <textarea 
-          v-model="newAnswer" 
-          placeholder="分享你的看法..." 
-          class="modal-textarea"
-          rows="5"
-        ></textarea>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showReplyModal = false">取消</button>
-          <button class="btn-send" @click="submitAnswer" :disabled="!newAnswer.trim()">發送</button>
+    <!-- Bottom Input Bar (Fixed) -->
+    <div class="bottom-input-bar">
+      <button class="btn-input-trigger" @click="openReplyModal">
+        <span class="icon">✎</span>
+        <span class="text">我來回答這個問題...</span>
+      </button>
+    </div>
+
+    <!-- Bottom Sheet Modal (Slide Up) -->
+    <transition name="slide-up">
+      <div v-if="showReplyModal" class="bottom-sheet-mask" @click.self="showReplyModal = false">
+        <div class="bottom-sheet">
+          <div class="sheet-header">
+            <h3>撰寫回答</h3>
+            <button class="btn-close" @click="showReplyModal = false">✕</button>
+          </div>
+          
+          <textarea 
+            v-model="newAnswer" 
+            placeholder="請輸入您的看法，溫暖的回答能幫助到更多人..." 
+            class="sheet-textarea"
+            rows="5"
+            autofocus
+          ></textarea>
+          
+          <div class="sheet-footer">
+            <button class="btn-primary btn-block btn-lg" @click="submitAnswer" :disabled="!newAnswer.trim()">
+              發布回答
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
 
   </div>
 </template>
 
 <style scoped>
 .detail-view {
-  background: #F5F5F5;
+  background: var(--bg-body);
   min-height: 100vh;
   padding-top: 70px;
+  padding-bottom: 80px; /* Space for bottom bar */
 }
 
 /* Nav Bar */
@@ -226,322 +259,234 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 70px;
+  height: 64px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1.25rem;
+  padding: 0 1rem;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .back-btn {
   background: none;
   border: none;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: var(--text-main);
-  padding: 0.75rem;
+  padding: 0.5rem;
   cursor: pointer;
-  border-radius: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s;
 }
 
-.back-btn:hover,
-.back-btn:focus {
-  background: var(--bg-input);
-  outline: none;
-}
+.back-btn:hover { background: var(--bg-input); }
 
 .nav-title {
-  font-weight: 800;
-  font-size: 1.25rem;
-}
-
-.placeholder { width: 48px; }
-
-/* Question Header */
-.question-header-card {
-  background: #fff;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid var(--border-color);
-  border-radius: 1rem;
-}
-
-.title {
-  font-size: 1.75rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.3;
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 1.125rem;
   color: var(--text-main);
 }
 
-.author-row {
+.placeholder { width: 40px; }
+
+/* Content Wrapper */
+.content-wrapper {
+  padding: 1rem;
+}
+
+/* --- Question Card (OP) --- */
+.question-card {
+  background: #FFFBF7; /* Very light warm orange bg */
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.card-header {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.avatar {
-  width: 56px;
-  height: 56px;
+.avatar-lg {
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
   object-fit: cover;
-  background: #eee;
-  border: 2px solid var(--border-color);
 }
 
-.info {
+.user-meta {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.name { font-weight: 800; color: var(--text-main); font-size: 1.125rem; }
-.date { font-size: 1rem; color: var(--text-muted); }
-
-.body-text {
-  font-size: 1.25rem;
-  line-height: 1.7;
-  color: var(--text-main);
-  white-space: pre-wrap;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
-}
-
-.card-actions {
-  border-top: 2px solid var(--border-color);
-  padding-top: 1.25rem;
-  text-align: right;
-}
-
-.reply-btn-outline {
-  background: white;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 0.75rem 1.5rem;
-  border-radius: 1.5rem;
+.username {
   font-size: 1.125rem;
   font-weight: 700;
+  color: var(--text-main);
+}
+
+.post-time {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Speak Button */
+.btn-speak-icon {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 3rem;
+  box-shadow: var(--shadow-sm);
 }
 
-.reply-btn-outline:hover,
-.reply-btn-outline:focus {
-  background: var(--primary-color);
-  color: white;
-  outline: none;
+.btn-speak-icon .icon { font-size: 1.25rem; }
+.btn-speak-icon .label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+
+.btn-speak-icon.is-speaking {
+  background: #FEF2F2;
+  border-color: #EF4444;
+  color: #EF4444;
 }
 
-.reply-btn-outline:active {
-  transform: scale(0.98);
+.question-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  line-height: 1.4;
 }
 
-/* Answers Area */
-.answers-area {
-  padding: 0 1.25rem;
+.question-body {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255,255,255,0.5);
+  border-radius: var(--radius-md);
+  transition: background 0.3s;
 }
 
-.divider {
-  text-align: center;
-  margin: 2rem 0;
+.question-body.highlight-read {
+  background: #FEF3C7; /* Highlight active reading */
+}
+
+.question-footer {
+  border-top: 1px solid rgba(0,0,0,0.05);
+  padding-top: 1rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
-  font-size: 1rem;
-  font-weight: 600;
-  position: relative;
 }
-.divider::before, .divider::after {
+
+/* --- Answers Section --- */
+.section-divider {
+  display: flex;
+  align-items: center;
+  margin: 0 0 1.5rem;
+}
+
+.divider-label {
+  background: var(--bg-body);
+  padding-right: 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.section-divider::after {
   content: '';
-  position: absolute;
-  top: 50%;
-  width: 35%;
-  height: 2px;
+  flex: 1;
+  height: 1px;
   background: var(--border-color);
 }
-.divider::before { left: 0; }
-.divider::after { right: 0; }
 
-.answer-item {
+.answer-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+
+.answer-card.highlight-read {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.answer-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
 }
 
-.answer-item.mine {
-  flex-direction: row-reverse;
-}
-
-.answer-avatar {
-  width: 48px;
-  height: 48px;
+.avatar-sm {
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   object-fit: cover;
-  background: #eee;
-  flex-shrink: 0;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
 }
 
-.answer-bubble {
-  background: #fff;
-  padding: 1rem 1.25rem;
-  border-radius: 1.5rem;
-  border-top-left-radius: 0.25rem;
-  box-shadow: var(--shadow-sm);
-  max-width: 80%;
-  position: relative;
-  border: 2px solid var(--border-color);
-}
-
-.answer-item.mine .answer-bubble {
-  background: #E3F2FD;
-  border-radius: 1.5rem;
-  border-top-right-radius: 0.25rem;
-  border-color: #BBDEFB;
-}
-
-.answer-name {
-  font-size: 1rem;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
+.answer-username {
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .answer-time {
   font-size: 0.875rem;
   color: var(--text-light);
-  float: right;
-  margin-top: 0.5rem;
-  margin-left: 1rem;
 }
 
-.bottom-spacer { height: 100px; }
-
-/* Modal Styles */
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 1.25rem;
-}
-
-.modal-container {
-  background: white;
-  width: 100%;
-  max-width: 450px;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-lg);
-  animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-  border: 2px solid var(--border-color);
-}
-
-@keyframes popIn {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-container h3 {
-  margin-bottom: 1.25rem;
-  color: var(--text-main);
-  font-size: 1.5rem;
-  font-weight: 800;
-}
-
-.modal-textarea {
-  width: 100%;
-  padding: 1rem;
-  border: 3px solid var(--border-color);
-  border-radius: 1rem;
-  resize: none;
+.answer-content {
   font-size: 1.125rem;
-  margin-bottom: 1.25rem;
-  font-family: inherit;
   line-height: 1.6;
-  min-height: 120px;
-}
-.modal-textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-focus);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-.btn-cancel {
-  background: #f5f5f5;
-  border: 2px solid var(--border-color);
-  padding: 0.75rem 1.5rem;
-  border-radius: 1.5rem;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 1.125rem;
-  cursor: pointer;
-  min-height: 3rem;
+  margin-bottom: 1rem;
 }
 
-.btn-cancel:hover {
-  background: var(--bg-hover);
-}
-
-.btn-send {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 1.5rem;
-  font-weight: 700;
-  font-size: 1.125rem;
-  cursor: pointer;
-  min-height: 3rem;
-  box-shadow: var(--shadow-md);
-}
-
-.btn-send:hover {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-}
-
-.btn-send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Speech Buttons */
-.title-row {
+.answer-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem;
+  justify-content: flex-end;
 }
 
-.btn-speak-main {
-  flex-shrink: 0;
-  background: #E3F2FD;
-  border: 2px solid #2196F3;
-  color: #1976D2;
-  padding: 0.75rem 1rem;
-  border-radius: 1rem;
-  font-size: 1.125rem;
-  font-weight: 700;
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -549,66 +494,130 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.btn-speak-main:hover,
-.btn-speak-main:focus {
-  background: #BBDEFB;
-  outline: none;
-}
-
-.btn-speak-main.is-speaking {
-  background: #FFEBEE;
-  border-color: #F44336;
-  color: #D32F2F;
-}
-
-.bubble-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.75rem;
-}
-
-.btn-speak-sm {
+.action-btn:hover {
   background: var(--bg-input);
-  border: 2px solid var(--border-color);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.action-btn.active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* --- Fixed Bottom Input Bar --- */
+.bottom-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  padding: 0.75rem 1rem 1.5rem; /* Safe area padding */
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+  z-index: 90;
+}
+
+.btn-input-trigger {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  padding: 0.875rem 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  gap: 0.75rem;
+  cursor: text;
+  color: var(--text-muted);
   font-size: 1rem;
   transition: all 0.2s;
 }
 
-.btn-speak-sm:hover,
-.btn-speak-sm:focus {
-  background: var(--primary-color);
-  color: white;
+.btn-input-trigger:hover {
+  background: white;
   border-color: var(--primary-color);
-  outline: none;
+  color: var(--text-secondary);
 }
 
-.btn-speak-sm.is-active {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-/* Loading Spinner */
-.loading-state {
+/* --- Bottom Sheet Modal --- */
+.bottom-sheet-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
   display: flex;
+  align-items: flex-end;
   justify-content: center;
-  padding-top: 100px;
 }
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid #f0f0f0;
-  border-top: 5px solid var(--primary-color);
+
+.bottom-sheet {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sheet-header h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.btn-close {
+  background: var(--bg-input);
+  border: none;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.sheet-textarea {
+  width: 100%;
+  border: 2px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-size: 1.125rem;
+  resize: none;
+  background: var(--bg-body);
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.sheet-textarea:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary-color);
+}
+
+.sheet-footer {
+  display: flex;
+}
+
+/* Transitions */
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translateY(100%);
+}
 </style>
