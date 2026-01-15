@@ -1,13 +1,41 @@
 var express = require('express');
 var router = express.Router();
 const { connectToDB, ObjectId } = require('../utils/db');
+const { verifyAccessToken } = require('../utils/jwt');
 
-// Middleware to check if user is logged in
+// Middleware to check if user is logged in (supports both session and JWT)
 function requireLogin(req, res, next) {
-  if (!req.session.user) {
-    return res.status(401).json({ success: false, message: '請先登錄' });
+  // First try JWT from Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (token) {
+    const payload = verifyAccessToken(token);
+    if (payload) {
+      req.user = payload;
+      return next();
+    }
+    return res.status(401).json({ success: false, message: '認證失敗，請重新登入' });
   }
-  next();
+
+  // Fall back to session (for web app)
+  if (req.session && req.session.user) {
+    req.user = req.session.user;
+    return next();
+  }
+
+  return res.status(401).json({ success: false, message: '請先登錄' });
+}
+
+// Helper to get current user ID from request (session or JWT)
+function getCurrentUserId(req) {
+  if (req.user) {
+    return req.user.id;
+  }
+  if (req.session && req.session.user) {
+    return req.session.user.id;
+  }
+  return null;
 }
 
 // GET /questions - Get all questions (newest first)
@@ -19,7 +47,28 @@ router.get('/', async function(req, res) {
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
-    res.json({ success: true, questions });
+    
+    // Transform questions for API response
+    const transformedQuestions = questions.map(q => ({
+      _id: q._id.toString(),
+      title: q.title,
+      content: q.content,
+      authorId: q.author?.id,
+      authorName: q.author?.username || '匿名用戶',
+      createdAt: q.createdAt,
+      views: q.views || 0,
+      answers: (q.answers || []).map(a => ({
+        _id: a._id.toString(),
+        content: a.content,
+        authorId: a.author?.id,
+        authorName: a.author?.username || '匿名用戶',
+        createdAt: a.createdAt,
+        thanks: a.thanks || 0
+      }))
+    }));
+    
+    // Support both old (questions) and new (data) response formats for backward compatibility
+    res.json({ success: true, questions: transformedQuestions, data: transformedQuestions });
   } catch (err) {
     console.error('Error in GET /questions:', err);
     res.status(500).json({ success: false, message: '獲取問題列表失敗: ' + err.message });
@@ -42,15 +91,29 @@ router.post('/', requireLogin, async function(req, res) {
       title,
       content,
       author: {
-        id: req.session.user.id,
-        username: req.session.user.username
+        id: req.user.id,
+        username: req.user.username
       },
       createdAt: new Date(),
+      views: 0,
       answers: [] // Array to store answers
     };
     
     const result = await db.collection('Questions').insertOne(newQuestion);
-    res.json({ success: true, message: '問題發布成功', questionId: result.insertedId });
+    
+    // Return the created question in API format
+    const createdQuestion = {
+      _id: result.insertedId.toString(),
+      title: newQuestion.title,
+      content: newQuestion.content,
+      authorId: newQuestion.author.id,
+      authorName: newQuestion.author.username,
+      createdAt: newQuestion.createdAt,
+      views: 0,
+      answers: []
+    };
+    
+    res.json({ success: true, message: '問題發布成功', data: createdQuestion });
   } catch (err) {
     console.error('Error in POST /questions:', err);
     res.status(500).json({ success: false, message: '發布問題失敗' });
@@ -65,7 +128,7 @@ router.get('/:id', async function(req, res) {
   try {
     db = await connectToDB();
     const questionId = new ObjectId(req.params.id);
-    const currentUserId = req.session.user ? req.session.user.id : null;
+    const currentUserId = getCurrentUserId(req);
 
     // Increment view count
     await db.collection('Questions').updateOne(
@@ -78,20 +141,28 @@ router.get('/:id', async function(req, res) {
       return res.status(404).json({ success: false, message: '找不到該問題' });
     }
 
-    // Process answers to add 'hasThanked' flag and remove sensitive 'thankedBy' array
-    if (question.answers) {
-      question.answers.forEach(answer => {
-        answer.hasThanked = false;
-        if (answer.thankedBy && currentUserId) {
-          // Check if current user ID is in the list
-          answer.hasThanked = answer.thankedBy.includes(currentUserId);
-        }
-        // Remove the list from response for privacy
-        delete answer.thankedBy;
-      });
-    }
+    // Transform question for API response
+    const transformedQuestion = {
+      _id: question._id.toString(),
+      title: question.title,
+      content: question.content,
+      authorId: question.author?.id,
+      authorName: question.author?.username || '匿名用戶',
+      createdAt: question.createdAt,
+      views: (question.views || 0) + 1, // Include the current view
+      answers: (question.answers || []).map(answer => ({
+        _id: answer._id.toString(),
+        content: answer.content,
+        authorId: answer.author?.id,
+        authorName: answer.author?.username || '匿名用戶',
+        createdAt: answer.createdAt,
+        thanks: answer.thanks || 0,
+        hasThanked: currentUserId && answer.thankedBy ? answer.thankedBy.includes(currentUserId) : false
+      }))
+    };
 
-    res.json({ success: true, question });
+    // Support both old (question) and new (data) response formats for backward compatibility
+    res.json({ success: true, question: transformedQuestion, data: transformedQuestion });
   } catch (err) {
     console.error('Error in GET /questions/:id:', err);
     res.status(500).json({ success: false, message: '獲取問題詳情失敗' });
@@ -107,7 +178,7 @@ router.post('/:id/answers/:answerId/thank', requireLogin, async function(req, re
     db = await connectToDB();
     const questionId = new ObjectId(req.params.id);
     const answerId = new ObjectId(req.params.answerId);
-    const userId = req.session.user.id;
+    const userId = req.user.id;
 
     // Use query to ensure user hasn't thanked yet
     const result = await db.collection('Questions').updateOne(
@@ -155,22 +226,57 @@ router.post('/:id/answers', requireLogin, async function(req, res) {
   let db;
   try {
     db = await connectToDB();
+    const questionId = new ObjectId(req.params.id);
     const newAnswer = {
       _id: new ObjectId(),
       content,
       author: {
-        id: req.session.user.id,
-        username: req.session.user.username
+        id: req.user.id,
+        username: req.user.username
       },
-      createdAt: new Date()
+      createdAt: new Date(),
+      thanks: 0,
+      thankedBy: []
     };
 
     await db.collection('Questions').updateOne(
-      { _id: new ObjectId(req.params.id) },
+      { _id: questionId },
       { $push: { answers: newAnswer } }
     );
 
-    res.json({ success: true, message: '回答提交成功', answer: newAnswer });
+    // Prepare the new answer for backward compatibility (web app expects this)
+    const answerResponse = {
+      _id: newAnswer._id,
+      content: newAnswer.content,
+      author: newAnswer.author,
+      createdAt: newAnswer.createdAt
+    };
+
+    // Fetch and return the updated question for mobile app
+    const updatedQuestion = await db.collection('Questions').findOne({ _id: questionId });
+    const currentUserId = req.user.id;
+    
+    const transformedQuestion = {
+      _id: updatedQuestion._id.toString(),
+      title: updatedQuestion.title,
+      content: updatedQuestion.content,
+      authorId: updatedQuestion.author?.id,
+      authorName: updatedQuestion.author?.username || '匿名用戶',
+      createdAt: updatedQuestion.createdAt,
+      views: updatedQuestion.views || 0,
+      answers: (updatedQuestion.answers || []).map(answer => ({
+        _id: answer._id.toString(),
+        content: answer.content,
+        authorId: answer.author?.id,
+        authorName: answer.author?.username || '匿名用戶',
+        createdAt: answer.createdAt,
+        thanks: answer.thanks || 0,
+        hasThanked: currentUserId && answer.thankedBy ? answer.thankedBy.includes(currentUserId) : false
+      }))
+    };
+
+    // Support both old (answer) and new (data) response formats for backward compatibility
+    res.json({ success: true, message: '回答提交成功', answer: answerResponse, data: transformedQuestion });
   } catch (err) {
     console.error('Error in POST /questions/:id/answers:', err);
     res.status(500).json({ success: false, message: '提交回答失敗' });

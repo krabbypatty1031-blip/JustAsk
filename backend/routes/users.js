@@ -1,7 +1,32 @@
-﻿var express = require('express');
+var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcryptjs');
 const { connectToDB } = require('../utils/db');
+const { verifyAccessToken } = require('../utils/jwt');
+
+// Middleware to check if user is logged in (supports both session and JWT)
+function requireLogin(req, res, next) {
+  // First try JWT from Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    const payload = verifyAccessToken(token);
+    if (payload) {
+      req.user = payload;
+      return next();
+    }
+    return res.status(401).json({ success: false, message: '認證失敗，請重新登入' });
+  }
+
+  // Fall back to session (for web app)
+  if (req.session && req.session.user) {
+    req.user = req.session.user;
+    return next();
+  }
+
+  return res.status(401).json({ success: false, message: '請先登錄' });
+}
 
 // GET register page
 router.get('/register', function(req, res) {
@@ -130,6 +155,38 @@ router.post('/reset-password', async function(req, res) {
   } catch (err) {
     console.error('Error in POST /reset-password:', err);
     res.status(500).json({ success: false, message: '重置密碼時出錯，請稍後再試。' });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
+// GET /users/profile - Get current user profile
+router.get('/profile', requireLogin, async function(req, res) {
+  let db;
+  try {
+    db = await connectToDB();
+    const { ObjectId } = require('mongodb');
+    
+    const user = await db.collection('Users').findOne({ 
+      _id: new ObjectId(req.user.id) 
+    });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: '用戶不存在' });
+    }
+
+    res.json({ 
+      success: true, 
+      data: {
+        _id: user._id.toString(),
+        username: user.username,
+        phone: user.phone,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (err) {
+    console.error('Error in GET /users/profile:', err);
+    res.status(500).json({ success: false, message: '獲取用戶資料失敗' });
   } finally {
     if (db) await db.client.close();
   }
