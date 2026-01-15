@@ -24,14 +24,14 @@ const fetchMyData = async () => {
       const allQuestions = response.data.questions
       const userId = currentUser.value.id || currentUser.value._id
 
-      // Filter My Questions
-      myQuestions.value = allQuestions.filter(q => 
-        q.author.id === userId || q.author._id === userId
+      // Filter My Questions (support both old and new format)
+      myQuestions.value = allQuestions.filter(q =>
+        q.authorId === userId || q.author?.id === userId || q.author?._id === userId
       )
 
-      // Filter My Answers
-      myAnsweredQuestions.value = allQuestions.filter(q => 
-        q.answers && q.answers.some(a => a.author.id === userId || a.author._id === userId)
+      // Filter My Answers (support both old and new format)
+      myAnsweredQuestions.value = allQuestions.filter(q =>
+        q.answers && q.answers.some(a => a.authorId === userId || a.author?.id === userId || a.author?._id === userId)
       )
     }
   } catch (err) {
@@ -181,7 +181,7 @@ const getGreeting = () => {
                 <div class="card-tag">我參與了回答</div>
                 <div class="card-title">{{ q.title }}</div>
                 <div class="card-meta">
-                  <span>提問者: {{ q.author.username }}</span>
+                  <span>提問者: {{ q.authorName || q.author?.username || '匿名用戶' }}</span>
                 </div>
               </div>
               <div class="card-arrow">›</div>

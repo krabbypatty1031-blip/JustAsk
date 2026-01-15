@@ -153,9 +153,9 @@ onMounted(() => {
       <!-- Question Card (OP) - Warm Theme -->
       <div class="question-card">
         <div class="card-header">
-          <img :src="getAvatarUrl(question.author.username)" class="avatar-lg" alt="avatar" />
+          <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="avatar-lg" alt="avatar" />
           <div class="user-meta">
-            <span class="username">{{ question.author.username }}</span>
+            <span class="username">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
             <span class="post-time">{{ new Date(question.createdAt).toLocaleString() }}</span>
           </div>
           <button 
@@ -194,15 +194,15 @@ onMounted(() => {
             v-for="answer in question.answers" 
             :key="answer._id" 
             class="answer-card"
-            :class="{ 
-              'mine': currentUser && answer.author.username === currentUser.username,
+            :class="{
+              'mine': currentUser && (answer.authorName || answer.author?.username) === currentUser.username,
               'highlight-read': isSpeakingId === answer._id
             }"
           >
             <div class="answer-header">
               <div class="user-info">
-                <img :src="getAvatarUrl(answer.author.username)" class="avatar-sm" alt="avatar" />
-                <span class="answer-username">{{ answer.author.username }}</span>
+                <img :src="getAvatarUrl(answer.authorName || answer.author?.username || '匿名')" class="avatar-sm" alt="avatar" />
+                <span class="answer-username">{{ answer.authorName || answer.author?.username || '匿名用戶' }}</span>
               </div>
               <span class="answer-time">{{ new Date(answer.createdAt).toLocaleDateString() }}</span>
             </div>

@@ -67,9 +67,9 @@ onMounted(() => {
         <!-- User Info Header -->
         <div class="card-header">
           <div class="user-info">
-            <img :src="getAvatarUrl(question.author.username)" class="avatar" alt="avatar" />
+            <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="avatar" alt="avatar" />
             <div class="meta-text">
-              <span class="username">{{ question.author.username }}</span>
+              <span class="username">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
               <span class="time">{{ new Date(question.createdAt).toLocaleDateString() }}</span>
             </div>
           </div>
