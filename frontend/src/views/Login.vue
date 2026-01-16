@@ -422,7 +422,7 @@ const handleFacebookLogin = () => {
   overflow: hidden;
   border-bottom-left-radius: 2rem;
   border-bottom-right-radius: 2rem;
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.25);
 }
 
 .hero-content {
@@ -545,13 +545,13 @@ const handleFacebookLogin = () => {
 .form-input:focus {
   border-color: var(--primary-color);
   outline: none;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
   background: white;
   transform: translateY(-1px);
 }
 
 .form-input:hover:not(:focus) {
-  border-color: #fbbf24;
+  border-color: #5eead4;
 }
 
 /* Input Validation States */
@@ -701,7 +701,7 @@ const handleFacebookLogin = () => {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
   min-height: 3.5rem;
   display: flex;
   align-items: center;
@@ -712,17 +712,17 @@ const handleFacebookLogin = () => {
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.45);
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.45);
 }
 
 .login-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
 }
 
 .login-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.3), 0 4px 12px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.3), 0 4px 12px rgba(20, 184, 166, 0.35);
 }
 
 .login-btn:disabled {
@@ -883,7 +883,7 @@ const handleFacebookLogin = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(249, 115, 22, 0.95);
+  background: rgba(20, 184, 166, 0.95);
   backdrop-filter: blur(10px);
   z-index: 9999;
   display: flex;
@@ -953,7 +953,7 @@ const handleFacebookLogin = () => {
 }
 
 .confetti-piece:nth-child(odd) {
-  background: #fbbf24;
+  background: #FB923C;
 }
 
 .confetti-piece:nth-child(3n) {

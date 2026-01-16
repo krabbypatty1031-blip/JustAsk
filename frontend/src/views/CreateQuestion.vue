@@ -395,7 +395,7 @@ const handleSubmit = async () => {
   color: white;
   border-color: transparent;
   transform: scale(1.1);
-  box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 10px 25px rgba(20, 184, 166, 0.4);
 }
 
 .btn-submit-full {
