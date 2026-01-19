@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, inject, nextTick } from 'vue'
+import { ref, onMounted, inject, nextTick, onUnmounted } from 'vue'
 import axios from '../api/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { getAvatarUrl } from '../utils/avatar'
+import Icon from '../components/Icon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,12 +24,11 @@ const handleToggleSpeech = (text, id) => {
     return
   }
 
-  // Stop any ongoing speech
   window.speechSynthesis.cancel()
 
   const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'zh-HK' // Cantonese
-  utterance.rate = 0.85     // Slightly slower for elderly
+  utterance.lang = 'zh-HK'
+  utterance.rate = 0.85
   utterance.pitch = 1.0
 
   utterance.onstart = () => {
@@ -41,7 +41,6 @@ const handleToggleSpeech = (text, id) => {
 
   utterance.onerror = (event) => {
     isSpeakingId.value = null
-    // Ignore errors caused by manual cancellation or interruption
     if (event.error === 'interrupted' || event.error === 'canceled') {
       return
     }
@@ -51,8 +50,6 @@ const handleToggleSpeech = (text, id) => {
   window.speechSynthesis.speak(utterance)
 }
 
-// Ensure speech stops when navigating away
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
   window.speechSynthesis.cancel()
 })
@@ -87,11 +84,11 @@ const submitAnswer = async () => {
     const response = await axios.post(`/questions/${route.params.id}/answers`, {
       content: newAnswer.value
     })
-    
+
     if (response.data.success) {
       question.value.answers.push(response.data.answer)
       newAnswer.value = ''
-      showReplyModal.value = false // Close modal
+      showReplyModal.value = false
       showToast('發送成功！', 'success')
       nextTick(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
@@ -108,22 +105,21 @@ const handleThank = async (answer) => {
     router.push('/login')
     return
   }
-  
+
   if (answer.hasThanked) {
     showToast('您已經感謝過了', 'info')
     return
   }
 
-  // Optimistic update
   if (!answer.thanks) answer.thanks = 0
   answer.thanks++
   answer.hasThanked = true
-  
+
   try {
     await axios.post(`/questions/${question.value._id}/answers/${answer._id}/thank`)
     showToast('已發送感謝！', 'success')
   } catch (e) {
-    answer.thanks-- // Revert on error
+    answer.thanks--
     answer.hasThanked = false
     const msg = e.response?.data?.message || '操作失敗'
     showToast(msg, 'error')
@@ -136,546 +132,702 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="detail-view">
+  <div class="neu-detail">
     <!-- Top Navigation Bar -->
-    <div class="nav-bar">
-      <button class="back-btn" @click="router.back()">←</button>
-      <span class="nav-title">詳情</span>
-      <div class="placeholder"></div>
+    <header class="neu-nav-bar">
+      <button class="neu-back-btn" @click="router.back()" aria-label="返回">
+        <Icon name="arrow-left" :size="24" />
+      </button>
+      <span class="neu-nav-title">詳情</span>
+      <div class="neu-nav-spacer"></div>
+    </header>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="neu-loading-state">
+      <span class="neu-spinner"></span>
     </div>
 
-    <div v-if="isLoading" class="loading-state">
-      <div class="spinner"></div>
-    </div>
-
-    <div v-else-if="question" class="content-wrapper">
-      
-      <!-- Question Card (OP) - Warm Theme -->
-      <div class="question-card">
-        <div class="card-header">
-          <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="avatar-lg" alt="avatar" />
-          <div class="user-meta">
-            <span class="username">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
-            <span class="post-time">{{ new Date(question.createdAt).toLocaleString() }}</span>
+    <!-- Content -->
+    <div v-else-if="question" class="neu-content-wrapper">
+      <!-- Question Card -->
+      <article class="neu-question-card">
+        <div class="neu-card-header">
+          <div class="neu-avatar-wrapper">
+            <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="neu-avatar" alt="avatar" />
           </div>
-          <button 
-            class="btn-speak-icon" 
+          <div class="neu-user-meta">
+            <span class="neu-username">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
+            <span class="neu-post-time">{{ new Date(question.createdAt).toLocaleString() }}</span>
+          </div>
+          <button
+            class="neu-speak-btn"
             @click="handleToggleSpeech(`${question.title}。${question.content}`, 'question')"
-            :class="{ 'is-speaking': isSpeakingId === 'question' }"
+            :class="{ 'active': isSpeakingId === 'question' }"
             :aria-label="isSpeakingId === 'question' ? '停止朗讀' : '朗讀問題'"
           >
-            <span class="icon">{{ isSpeakingId === 'question' ? '🛑' : '🔊' }}</span>
-            <span class="label">{{ isSpeakingId === 'question' ? '停止' : '聽問題' }}</span>
+            <Icon :name="isSpeakingId === 'question' ? 'stop' : 'speaker-wave'" :size="18" />
+            <span>{{ isSpeakingId === 'question' ? '停止' : '聽問題' }}</span>
           </button>
         </div>
-        
-        <h1 class="question-title">{{ question.title }}</h1>
-        
-        <div class="question-body" :class="{ 'highlight-read': isSpeakingId === 'question' }">
+
+        <h1 class="neu-question-title">{{ question.title }}</h1>
+
+        <div class="neu-question-body" :class="{ 'highlight': isSpeakingId === 'question' }">
           {{ question.content }}
         </div>
 
-        <div class="question-footer">
-          <div class="stats">
-            <span>👁 {{ question.views || 0 }} 次瀏覽</span>
-            <span>💬 {{ question.answers.length }} 條回答</span>
+        <div class="neu-question-footer">
+          <div class="neu-stats">
+            <span>
+              <Icon name="eye" :size="16" />
+              {{ question.views || 0 }} 次瀏覽
+            </span>
+            <span>
+              <Icon name="chat-bubble-left-ellipsis" :size="16" />
+              {{ question.answers.length }} 條回答
+            </span>
           </div>
         </div>
-      </div>
+      </article>
 
-      <!-- Answers List -->
-      <div class="answers-section" ref="answersContainer">
-        <div class="section-divider">
-          <span class="divider-label">大家的回答</span>
+      <!-- Answers Section -->
+      <section class="neu-answers-section" ref="answersContainer">
+        <div class="neu-section-divider">
+          <span class="neu-divider-label">大家的回答</span>
         </div>
 
         <transition-group name="list">
-          <div 
-            v-for="answer in question.answers" 
-            :key="answer._id" 
-            class="answer-card"
+          <article
+            v-for="answer in question.answers"
+            :key="answer._id"
+            class="neu-answer-card"
             :class="{
               'mine': currentUser && (answer.authorName || answer.author?.username) === currentUser.username,
-              'highlight-read': isSpeakingId === answer._id
+              'highlight': isSpeakingId === answer._id
             }"
           >
-            <div class="answer-header">
-              <div class="user-info">
-                <img :src="getAvatarUrl(answer.authorName || answer.author?.username || '匿名')" class="avatar-sm" alt="avatar" />
-                <span class="answer-username">{{ answer.authorName || answer.author?.username || '匿名用戶' }}</span>
+            <div class="neu-answer-header">
+              <div class="neu-user-info">
+                <div class="neu-avatar-sm-wrapper">
+                  <img :src="getAvatarUrl(answer.authorName || answer.author?.username || '匿名')" class="neu-avatar-sm" alt="avatar" />
+                </div>
+                <span class="neu-answer-username">{{ answer.authorName || answer.author?.username || '匿名用戶' }}</span>
               </div>
-              <span class="answer-time">{{ new Date(answer.createdAt).toLocaleDateString() }}</span>
+              <span class="neu-answer-time">{{ new Date(answer.createdAt).toLocaleDateString() }}</span>
             </div>
-            
-            <div class="answer-content">
+
+            <div class="neu-answer-content">
               {{ answer.content }}
             </div>
 
-            <div class="answer-actions">
-              <button 
-                class="action-btn speak-btn" 
+            <div class="neu-answer-actions">
+              <button
+                class="neu-action-btn"
                 @click="handleToggleSpeech(answer.content, answer._id)"
                 :class="{ 'active': isSpeakingId === answer._id }"
               >
-                <span class="icon">{{ isSpeakingId === answer._id ? '🛑' : '🔊' }}</span>
+                <Icon :name="isSpeakingId === answer._id ? 'stop' : 'speaker-wave'" :size="16" />
                 {{ isSpeakingId === answer._id ? '停止' : '聽回答' }}
               </button>
-              
-              <!-- 'Like' feature -->
-              <button 
-                class="action-btn like-btn" 
+
+              <button
+                class="neu-action-btn thank-btn"
                 @click="handleThank(answer)"
                 :class="{ 'thanked': answer.hasThanked }"
                 :disabled="answer.hasThanked"
               >
-                <span class="icon">{{ answer.hasThanked ? '❤️' : '👍' }}</span> 
-                {{ answer.hasThanked ? '已感謝' : '謝謝' }} {{ answer.thanks ? `(${answer.thanks})` : '' }}
+                <Icon :name="answer.hasThanked ? 'heart' : 'hand-thumb-up'" :size="16" />
+                {{ answer.hasThanked ? '已感謝' : '謝謝' }}
+                <span v-if="answer.thanks">({{ answer.thanks }})</span>
               </button>
             </div>
-          </div>
+          </article>
         </transition-group>
-        
-        <div class="bottom-spacer"></div>
-      </div>
 
+        <div class="neu-bottom-spacer"></div>
+      </section>
     </div>
 
-    <!-- Bottom Input Bar (Fixed) -->
-    <div class="bottom-input-bar">
-      <button class="btn-input-trigger" @click="openReplyModal">
-        <span class="icon">✎</span>
-        <span class="text">我來回答這個問題...</span>
+    <!-- Bottom Input Bar -->
+    <div class="neu-bottom-bar">
+      <button class="neu-input-trigger" @click="openReplyModal">
+        <Icon name="pencil" :size="18" />
+        <span>我來回答這個問題...</span>
       </button>
     </div>
 
-    <!-- Bottom Sheet Modal (Slide Up) -->
+    <!-- Reply Modal -->
     <transition name="slide-up">
-      <div v-if="showReplyModal" class="bottom-sheet-mask" @click.self="showReplyModal = false">
-        <div class="bottom-sheet">
-          <div class="sheet-header">
+      <div v-if="showReplyModal" class="neu-modal-mask" @click.self="showReplyModal = false">
+        <div class="neu-modal-sheet">
+          <div class="neu-sheet-header">
             <h3>撰寫回答</h3>
-            <button class="btn-close" @click="showReplyModal = false">✕</button>
+            <button class="neu-close-btn" @click="showReplyModal = false">
+              <Icon name="x-mark" :size="20" />
+            </button>
           </div>
-          
-          <textarea 
-            v-model="newAnswer" 
-            placeholder="請輸入您的看法，溫暖的回答能幫助到更多人..." 
-            class="sheet-textarea"
+
+          <textarea
+            v-model="newAnswer"
+            placeholder="請輸入您的看法，溫暖的回答能幫助到更多人..."
+            class="neu-sheet-textarea"
             rows="5"
             autofocus
           ></textarea>
-          
-          <div class="sheet-footer">
-            <button class="btn-primary btn-block btn-lg" @click="submitAnswer" :disabled="!newAnswer.trim()">
+
+          <div class="neu-sheet-footer">
+            <button class="neu-submit-btn" @click="submitAnswer" :disabled="!newAnswer.trim()">
+              <Icon name="paper-airplane" :size="20" />
               發布回答
             </button>
           </div>
         </div>
       </div>
     </transition>
-
   </div>
 </template>
 
 <style scoped>
-.detail-view {
-  background: var(--bg-body);
+/* ============================================
+   NEUMORPHISM QUESTION DETAIL PAGE
+   ============================================ */
+.neu-detail {
   min-height: 100vh;
-  padding-top: 70px;
-  padding-bottom: 100px; /* Increased space for the fixed input bar */
+  background: var(--neu-bg);
+  padding-top: calc(4rem + var(--sat));
+  padding-bottom: calc(5rem + var(--sab));
 }
 
-/* Nav Bar */
-.nav-bar {
+/* --- Navigation Bar --- */
+.neu-nav-bar {
   position: fixed;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: calc(64px + var(--sat)); /* Add top safe area */
+  height: calc(4rem + var(--sat));
   padding-top: var(--sat);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: var(--neu-bg);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: calc(1rem + var(--sal));
-  padding-right: calc(1rem + var(--sar));
+  padding-left: 1rem;
+  padding-right: 1rem;
   z-index: 100;
-  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.bottom-input-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  background: white;
-  padding: 0.75rem 1rem calc(1.5rem + var(--sab)); /* Safe area padding */
-  border-top: 1px solid var(--border-color);
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-  z-index: 90;
-}
-
-
-.back-btn {
-  background: none;
+.neu-back-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--neu-bg);
   border: none;
-  font-size: 1.5rem;
-  color: var(--text-main);
-  padding: 0.5rem;
-  cursor: pointer;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  cursor: pointer;
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.back-btn:hover { background: var(--bg-input); }
+.neu-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
 
-.nav-title {
-  font-weight: 700;
+.neu-back-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-nav-title {
   font-size: 1.125rem;
-  color: var(--text-main);
+  font-weight: 700;
+  color: var(--neu-text);
 }
 
-.placeholder { width: 40px; }
+.neu-nav-spacer {
+  width: 2.5rem;
+}
 
-/* Content Wrapper */
-.content-wrapper {
+/* --- Loading State --- */
+.neu-loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+}
+
+.neu-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--neu-bg-dark);
+  border-top-color: var(--neu-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* --- Content Wrapper --- */
+.neu-content-wrapper {
   padding: 1rem;
 }
 
-/* --- Question Card (OP) --- */
-.question-card {
-  background: #FFFBF7; /* Very light warm orange bg */
-  border-radius: var(--radius-lg);
+/* --- Question Card --- */
+.neu-question-card {
+  background: var(--neu-bg);
+  border-radius: 1.5rem;
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  margin-bottom: 2rem;
+  box-shadow: var(--neu-shadow-out);
+  margin-bottom: 1.5rem;
 }
 
-.card-header {
+.neu-card-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
 }
 
-.avatar-lg {
-  width: 3.5rem;
-  height: 3.5rem;
+.neu-avatar-wrapper {
+  width: 3.25rem;
+  height: 3.25rem;
   border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: var(--shadow-sm);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
+  padding: 3px;
+}
+
+.neu-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   object-fit: cover;
 }
 
-.user-meta {
+.neu-user-meta {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.username {
-  font-size: 1.125rem;
+.neu-username {
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--neu-text);
 }
 
-.post-time {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+.neu-post-time {
+  font-size: 0.8125rem;
+  color: var(--neu-text-muted);
 }
 
-/* Speak Button */
-.btn-speak-icon {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 2rem;
-  padding: 0.5rem 0.75rem;
+.neu-speak-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 2rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.btn-speak-icon .icon { font-size: 1.25rem; }
-.btn-speak-icon .label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
-
-.btn-speak-icon.is-speaking {
-  background: #FEF2F2;
-  border-color: #EF4444;
-  color: #EF4444;
+.neu-speak-btn:hover {
+  color: var(--neu-primary);
 }
 
-.question-title {
-  font-size: 1.5rem;
+.neu-speak-btn.active {
+  background: var(--neu-error);
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.neu-question-title {
+  font-size: 1.375rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--neu-text);
   margin-bottom: 1rem;
   line-height: 1.4;
 }
 
-.question-body {
-  font-size: 1.125rem;
+.neu-question-body {
+  font-size: 1rem;
   line-height: 1.7;
-  color: var(--text-secondary);
+  color: var(--neu-text-muted);
   white-space: pre-wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   padding: 1rem;
-  background: rgba(255,255,255,0.5);
-  border-radius: var(--radius-md);
-  transition: background 0.3s;
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  box-shadow: var(--neu-shadow-in);
+  transition: background 0.3s ease;
 }
 
-.question-body.highlight-read {
-  background: #FEF3C7; /* Highlight active reading */
+.neu-question-body.highlight {
+  background: rgba(245, 158, 11, 0.1);
 }
 
-.question-footer {
-  border-top: 1px solid rgba(0,0,0,0.05);
+.neu-question-footer {
   padding-top: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  border-top: 1px solid var(--neu-bg-dark);
+}
+
+.neu-stats {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--neu-text-muted);
+  font-weight: 500;
+}
+
+.neu-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 /* --- Answers Section --- */
-.section-divider {
+.neu-answers-section {
+  margin-top: 0.5rem;
+}
+
+.neu-section-divider {
   display: flex;
   align-items: center;
-  margin: 0 0 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.divider-label {
-  background: var(--bg-body);
-  padding-right: 1rem;
-  font-size: 1.125rem;
+.neu-divider-label {
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--neu-text);
+  padding-right: 1rem;
 }
 
-.section-divider::after {
+.neu-section-divider::after {
   content: '';
   flex: 1;
-  height: 1px;
-  background: var(--border-color);
+  height: 2px;
+  background: var(--neu-bg-dark);
 }
 
-.answer-card {
-  background: white;
-  border-radius: var(--radius-lg);
+/* --- Answer Card --- */
+.neu-answer-card {
+  background: var(--neu-bg);
+  border-radius: 1.25rem;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s;
+  box-shadow: var(--neu-shadow-out);
+  transition: all 0.3s ease;
 }
 
-.answer-card.highlight-read {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px var(--primary-light);
+.neu-answer-card.highlight {
+  box-shadow: var(--neu-shadow-out-lg),
+              0 0 0 2px var(--neu-primary);
 }
 
-.answer-header {
+.neu-answer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
 }
 
-.user-info {
+.neu-user-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
-.avatar-sm {
-  width: 2.5rem;
-  height: 2.5rem;
+.neu-avatar-sm-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
+  padding: 2px;
+}
+
+.neu-avatar-sm {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--border-color);
 }
 
-.answer-username {
+.neu-answer-username {
   font-weight: 700;
-  color: var(--text-main);
+  font-size: 0.9375rem;
+  color: var(--neu-text);
 }
 
-.answer-time {
-  font-size: 0.875rem;
-  color: var(--text-light);
+.neu-answer-time {
+  font-size: 0.8125rem;
+  color: var(--neu-text-light);
 }
 
-.answer-content {
-  font-size: 1.125rem;
+.neu-answer-content {
+  font-size: 1rem;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: var(--neu-text-muted);
   margin-bottom: 1rem;
 }
 
-.answer-actions {
+.neu-answer-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: flex-end;
 }
 
-.action-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
+.neu-action-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
+  gap: 0.375rem;
+  background: var(--neu-bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.action-btn:hover {
-  background: var(--bg-input);
-  color: var(--primary-color);
-  border-color: var(--primary-color);
+.neu-action-btn:hover {
+  color: var(--neu-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
 }
 
-.action-btn.active {
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border-color: var(--primary-color);
+.neu-action-btn.active {
+  background: var(--neu-primary);
+  color: white;
+  box-shadow: 0 4px 10px rgba(20, 184, 166, 0.3);
 }
 
-.action-btn.thanked {
-  background: #FFF0F0;
-  color: #E11D48;
-  border-color: #FECDD3;
+.neu-action-btn.thank-btn.thanked {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--neu-error);
+  box-shadow: none;
   cursor: default;
 }
 
-/* --- Fixed Bottom Input Bar --- */
-.bottom-input-bar {
+.neu-action-btn.thank-btn.thanked:hover {
+  transform: none;
+}
+
+.neu-bottom-spacer {
+  height: 2rem;
+}
+
+/* --- Bottom Input Bar --- */
+.neu-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  background: white;
-  padding: 0.75rem 1rem 1.5rem; /* Safe area padding */
-  border-top: 1px solid var(--border-color);
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+  background: var(--neu-bg);
+  padding: 0.875rem 1rem calc(1.25rem + var(--sab));
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
   z-index: 90;
 }
 
-.btn-input-trigger {
+.neu-input-trigger {
   width: 100%;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  background: var(--neu-bg);
+  border: none;
   border-radius: 2rem;
-  padding: 0.875rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
   cursor: text;
-  color: var(--text-muted);
-  font-size: 1rem;
-  transition: all 0.2s;
+  color: var(--neu-text-muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  box-shadow: var(--neu-shadow-in);
+  transition: all 0.2s ease;
 }
 
-.btn-input-trigger:hover {
-  background: white;
-  border-color: var(--primary-color);
-  color: var(--text-secondary);
+.neu-input-trigger:hover {
+  color: var(--neu-primary);
 }
 
-/* --- Bottom Sheet Modal --- */
-.bottom-sheet-mask {
+/* --- Modal Sheet --- */
+.neu-modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 2000;
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
 
-.bottom-sheet {
-  background: white;
+.neu-modal-sheet {
+  background: var(--neu-bg);
   width: 100%;
   max-width: 480px;
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
   padding: 1.5rem;
-  box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: calc(1.5rem + var(--sab));
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
 }
 
-.sheet-header {
+.neu-sheet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.sheet-header h3 {
+.neu-sheet-header h3 {
   font-size: 1.25rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--neu-text);
 }
 
-.btn-close {
-  background: var(--bg-input);
+.neu-close-btn {
+  width: 2rem;
+  height: 2rem;
+  background: var(--neu-bg);
   border: none;
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 1rem;
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.sheet-textarea {
+.neu-close-btn:hover {
+  color: var(--neu-error);
+}
+
+.neu-sheet-textarea {
   width: 100%;
-  border: 2px solid var(--border-color);
+  background: var(--neu-bg);
+  border: none;
   border-radius: 1rem;
   padding: 1rem;
-  font-size: 1.125rem;
+  font-size: 1rem;
+  line-height: 1.6;
   resize: none;
-  background: var(--bg-body);
-  margin-bottom: 1.5rem;
-  display: block;
+  box-shadow: var(--neu-shadow-in);
+  margin-bottom: 1.25rem;
+  color: var(--neu-text);
 }
 
-.sheet-textarea:focus {
+.neu-sheet-textarea::placeholder {
+  color: var(--neu-text-light);
+}
+
+.neu-sheet-textarea:focus {
   outline: none;
-  background: white;
-  border-color: var(--primary-color);
+  box-shadow: var(--neu-shadow-in-deep),
+              0 0 0 3px rgba(20, 184, 166, 0.15);
 }
 
-.sheet-footer {
+.neu-sheet-footer {
   display: flex;
 }
 
-/* Transitions */
-.slide-up-enter-active, .slide-up-leave-active {
+.neu-submit-btn {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1),
+              -4px -4px 10px rgba(255, 255, 255, 0.7),
+              0 4px 16px rgba(20, 184, 166, 0.35);
   transition: all 0.3s ease;
 }
-.slide-up-enter-from, .slide-up-leave-to {
+
+.neu-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.12),
+              -6px -6px 12px rgba(255, 255, 255, 0.8),
+              0 6px 20px rgba(20, 184, 166, 0.45);
+}
+
+.neu-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Transitions --- */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
   transform: translateY(100%);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Responsive --- */
+@media (max-width: 400px) {
+  .neu-content-wrapper {
+    padding: 0.75rem;
+  }
+
+  .neu-question-card {
+    padding: 1.25rem;
+  }
+
+  .neu-answer-card {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

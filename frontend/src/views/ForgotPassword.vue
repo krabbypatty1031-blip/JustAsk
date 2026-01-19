@@ -2,6 +2,7 @@
 import { ref, inject, computed, watch } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
+import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 const showToast = inject('showToast')
@@ -78,7 +79,6 @@ watch(newPassword, (value) => {
   if (touched.value.newPassword) {
     errors.value.newPassword = validateNewPassword(value)
   }
-  // Re-validate confirm password when password changes
   if (touched.value.confirmNewPassword && confirmNewPassword.value) {
     errors.value.confirmNewPassword = validateConfirmNewPassword(confirmNewPassword.value)
   }
@@ -90,7 +90,6 @@ watch(confirmNewPassword, (value) => {
   }
 })
 
-// Mark field as touched on blur
 const handleBlur = (field) => {
   touched.value[field] = true
   if (field === 'username') errors.value.username = validateUsername(username.value)
@@ -99,7 +98,6 @@ const handleBlur = (field) => {
   if (field === 'confirmNewPassword') errors.value.confirmNewPassword = validateConfirmNewPassword(confirmNewPassword.value)
 }
 
-// Step validation
 const isStep1Valid = computed(() => {
   return !validateUsername(username.value) && !validatePhone(phone.value)
 })
@@ -108,10 +106,8 @@ const isStep2Valid = computed(() => {
   return !validateNewPassword(newPassword.value) && !validateConfirmNewPassword(confirmNewPassword.value)
 })
 
-// Step navigation
 const nextStep = () => {
   if (currentStep.value === 1) {
-    // Validate step 1
     touched.value.username = true
     touched.value.phone = true
     errors.value.username = validateUsername(username.value)
@@ -135,7 +131,6 @@ const prevStep = () => {
 }
 
 const handleResetPassword = async () => {
-  // Validate step 2
   touched.value.newPassword = true
   touched.value.confirmNewPassword = true
   errors.value.newPassword = validateNewPassword(newPassword.value)
@@ -156,7 +151,7 @@ const handleResetPassword = async () => {
 
     if (response.data.success) {
       showToast('重置成功', 'success')
-      currentStep.value = 3 // Go to success step
+      currentStep.value = 3
     }
   } catch (err) {
     showToast(err.response?.data?.message || '重置失敗，請檢查用戶名和手機號', 'error')
@@ -171,268 +166,204 @@ const goToLogin = () => {
 </script>
 
 <template>
-  <div class="forgot-password-container">
-    <!-- Hero Section with Gradient -->
-    <div class="hero-section">
-      <div class="hero-content">
-        <div class="logo-badge">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-          </svg>
-        </div>
-        <h1 class="hero-title">忘記密碼了嗎？</h1>
-        <p class="hero-subtitle">別擔心，我們來幫您</p>
-      </div>
+  <div class="neu-forgot">
+    <!-- Header -->
+    <header class="neu-forgot-header">
+      <button class="neu-back-btn" @click="router.back()" aria-label="返回">
+        <Icon name="arrow-left" :size="24" />
+      </button>
+      <h1 class="neu-forgot-title">重置密碼</h1>
+      <div class="neu-header-spacer"></div>
+    </header>
 
-      <!-- Decorative Elements -->
-      <div class="deco-circle deco-1"></div>
-      <div class="deco-circle deco-2"></div>
+    <!-- Hero Section -->
+    <div class="neu-hero">
+      <div class="neu-hero-icon">
+        <Icon name="lock-closed" :size="40" :stroke-width="1.5" />
+      </div>
+      <h2 class="neu-hero-title">忘記密碼了嗎？</h2>
+      <p class="neu-hero-text">別擔心，我們來幫您</p>
     </div>
 
     <!-- Step Indicator -->
-    <div class="step-indicator">
+    <div class="neu-steps">
       <div
         v-for="step in totalSteps"
         :key="step"
-        class="step-item"
+        class="neu-step"
         :class="{
           'active': currentStep === step,
           'completed': currentStep > step
         }"
       >
-        <div class="step-circle">
-          <svg v-if="currentStep > step" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <div class="neu-step-circle">
+          <Icon v-if="currentStep > step" name="check" :size="16" :stroke-width="3" />
           <span v-else>{{ step }}</span>
         </div>
-        <div class="step-label">
+        <span class="neu-step-label">
           <span v-if="step === 1">驗證身份</span>
           <span v-if="step === 2">設定密碼</span>
           <span v-if="step === 3">完成</span>
-        </div>
+        </span>
       </div>
     </div>
 
     <!-- Form Section -->
-    <div class="form-section">
+    <div class="neu-form-section">
       <!-- Step 1: Verify Identity -->
       <transition name="step-fade" mode="out-in">
-        <form v-if="currentStep === 1" @submit.prevent="nextStep" class="step-form" key="step1">
-          <h2 class="step-title">驗證您的身份</h2>
-          <p class="step-description">請輸入您的帳號資訊以驗證身份</p>
+        <form v-if="currentStep === 1" @submit.prevent="nextStep" class="neu-form" key="step1">
+          <h3 class="neu-form-title">驗證您的身份</h3>
+          <p class="neu-form-desc">請輸入您的帳號資訊以驗證身份</p>
 
           <!-- Username Input -->
-          <div class="form-group">
-            <label for="username" class="form-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+          <div class="neu-form-group">
+            <label for="username" class="neu-label">
+              <Icon name="user" :size="18" />
               <span>用戶名</span>
             </label>
-            <input
-              id="username"
-              v-model="username"
-              type="text"
-              class="form-input"
-              :class="{ 'error': touched.username && errors.username, 'valid': touched.username && !errors.username && username }"
-              placeholder="請輸入您的用戶名"
-              aria-label="用戶名"
-              autocomplete="username"
-              required
-              @blur="handleBlur('username')"
-            />
+            <div class="neu-input-wrapper">
+              <input
+                id="username"
+                v-model="username"
+                type="text"
+                class="neu-input"
+                :class="{ 'error': touched.username && errors.username, 'valid': touched.username && !errors.username && username }"
+                placeholder="請輸入您的用戶名"
+                autocomplete="username"
+                @blur="handleBlur('username')"
+              />
+            </div>
             <transition name="error-fade">
-              <div v-if="touched.username && errors.username" class="error-message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+              <p v-if="touched.username && errors.username" class="neu-error">
+                <Icon name="exclamation-circle" :size="14" />
                 {{ errors.username }}
-              </div>
+              </p>
             </transition>
           </div>
 
           <!-- Phone Input -->
-          <div class="form-group">
-            <label for="phone" class="form-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
+          <div class="neu-form-group">
+            <label for="phone" class="neu-label">
+              <Icon name="phone" :size="18" />
               <span>手機號碼</span>
             </label>
-            <input
-              id="phone"
-              v-model="phone"
-              type="tel"
-              class="form-input"
-              :class="{ 'error': touched.phone && errors.phone, 'valid': touched.phone && !errors.phone && phone }"
-              placeholder="請輸入註冊手機號碼"
-              aria-label="手機號碼"
-              autocomplete="tel"
-              required
-              @blur="handleBlur('phone')"
-            />
+            <div class="neu-input-wrapper">
+              <input
+                id="phone"
+                v-model="phone"
+                type="tel"
+                class="neu-input"
+                :class="{ 'error': touched.phone && errors.phone, 'valid': touched.phone && !errors.phone && phone }"
+                placeholder="請輸入註冊手機號碼"
+                autocomplete="tel"
+                @blur="handleBlur('phone')"
+              />
+            </div>
             <transition name="error-fade">
-              <div v-if="touched.phone && errors.phone" class="error-message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+              <p v-if="touched.phone && errors.phone" class="neu-error">
+                <Icon name="exclamation-circle" :size="14" />
                 {{ errors.phone }}
-              </div>
+              </p>
             </transition>
           </div>
 
           <!-- Next Button -->
-          <button type="submit" class="action-btn primary-btn">
+          <button type="submit" class="neu-btn neu-btn-primary">
             <span>下一步</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
+            <Icon name="arrow-right" :size="20" />
           </button>
 
           <!-- Back to Login -->
-          <div class="back-link">
-            <span class="prompt-text">想起密碼了？</span>
-            <router-link to="/login" class="link-text">返回登入</router-link>
+          <div class="neu-back-link">
+            <span>想起密碼了？</span>
+            <router-link to="/login" class="neu-link">返回登入</router-link>
           </div>
         </form>
 
         <!-- Step 2: Set New Password -->
-        <form v-else-if="currentStep === 2" @submit.prevent="handleResetPassword" class="step-form" key="step2">
-          <h2 class="step-title">設定新密碼</h2>
-          <p class="step-description">請輸入您的新密碼</p>
+        <form v-else-if="currentStep === 2" @submit.prevent="handleResetPassword" class="neu-form" key="step2">
+          <h3 class="neu-form-title">設定新密碼</h3>
+          <p class="neu-form-desc">請輸入您的新密碼</p>
 
           <!-- New Password Input -->
-          <div class="form-group">
-            <label for="newPassword" class="form-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
+          <div class="neu-form-group">
+            <label for="newPassword" class="neu-label">
+              <Icon name="lock-closed" :size="18" />
               <span>新密碼</span>
             </label>
-            <div class="input-wrapper">
+            <div class="neu-input-wrapper neu-input-with-btn">
               <input
                 id="newPassword"
                 v-model="newPassword"
                 :type="isPasswordVisible ? 'text' : 'password'"
-                class="form-input"
+                class="neu-input"
                 :class="{ 'error': touched.newPassword && errors.newPassword, 'valid': touched.newPassword && !errors.newPassword && newPassword }"
                 placeholder="請輸入新密碼"
-                aria-label="新密碼"
                 autocomplete="new-password"
-                required
                 @blur="handleBlur('newPassword')"
               />
               <button
                 type="button"
-                class="password-toggle"
+                class="neu-toggle-btn"
                 @click="isPasswordVisible = !isPasswordVisible"
                 :aria-label="isPasswordVisible ? '隱藏密碼' : '顯示密碼'"
-                tabindex="-1"
               >
-                <svg v-if="!isPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
+                <Icon :name="isPasswordVisible ? 'eye-slash' : 'eye'" :size="20" />
               </button>
             </div>
             <transition name="error-fade">
-              <div v-if="touched.newPassword && errors.newPassword" class="error-message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+              <p v-if="touched.newPassword && errors.newPassword" class="neu-error">
+                <Icon name="exclamation-circle" :size="14" />
                 {{ errors.newPassword }}
-              </div>
+              </p>
             </transition>
           </div>
 
-          <!-- Confirm New Password Input -->
-          <div class="form-group">
-            <label for="confirmNewPassword" class="form-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
+          <!-- Confirm Password Input -->
+          <div class="neu-form-group">
+            <label for="confirmNewPassword" class="neu-label">
+              <Icon name="lock-closed" :size="18" />
               <span>確認新密碼</span>
             </label>
-            <div class="input-wrapper">
+            <div class="neu-input-wrapper neu-input-with-btn">
               <input
                 id="confirmNewPassword"
                 v-model="confirmNewPassword"
                 :type="isConfirmPasswordVisible ? 'text' : 'password'"
-                class="form-input"
+                class="neu-input"
                 :class="{ 'error': touched.confirmNewPassword && errors.confirmNewPassword, 'valid': touched.confirmNewPassword && !errors.confirmNewPassword && confirmNewPassword }"
                 placeholder="請再次輸入新密碼"
-                aria-label="確認新密碼"
                 autocomplete="new-password"
-                required
                 @blur="handleBlur('confirmNewPassword')"
               />
               <button
                 type="button"
-                class="password-toggle"
+                class="neu-toggle-btn"
                 @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
                 :aria-label="isConfirmPasswordVisible ? '隱藏確認密碼' : '顯示確認密碼'"
-                tabindex="-1"
               >
-                <svg v-if="!isConfirmPasswordVisible" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
+                <Icon :name="isConfirmPasswordVisible ? 'eye-slash' : 'eye'" :size="20" />
               </button>
             </div>
             <transition name="error-fade">
-              <div v-if="touched.confirmNewPassword && errors.confirmNewPassword" class="error-message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+              <p v-if="touched.confirmNewPassword && errors.confirmNewPassword" class="neu-error">
+                <Icon name="exclamation-circle" :size="14" />
                 {{ errors.confirmNewPassword }}
-              </div>
+              </p>
             </transition>
           </div>
 
           <!-- Action Buttons -->
-          <div class="button-group">
-            <button type="button" class="action-btn outline-btn" @click="prevStep">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
+          <div class="neu-btn-group">
+            <button type="button" class="neu-btn neu-btn-outline" @click="prevStep">
+              <Icon name="arrow-left" :size="20" />
               <span>上一步</span>
             </button>
-            <button type="submit" class="action-btn primary-btn" :disabled="isLoading" :class="{ 'loading': isLoading }">
+            <button type="submit" class="neu-btn neu-btn-primary" :disabled="isLoading">
               <span v-if="!isLoading">重置密碼</span>
-              <span v-else class="loading-content">
-                <svg class="spinner" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="2" x2="12" y2="6"></line>
-                  <line x1="12" y1="18" x2="12" y2="22"></line>
-                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-                  <line x1="2" y1="12" x2="6" y2="12"></line>
-                  <line x1="18" y1="12" x2="22" y2="12"></line>
-                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-                </svg>
+              <span v-else class="neu-loading">
+                <span class="neu-spinner"></span>
                 重置中...
               </span>
             </button>
@@ -440,23 +371,16 @@ const goToLogin = () => {
         </form>
 
         <!-- Step 3: Success -->
-        <div v-else-if="currentStep === 3" class="step-form success-step" key="step3">
-          <div class="success-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+        <div v-else-if="currentStep === 3" class="neu-form neu-success" key="step3">
+          <div class="neu-success-icon">
+            <Icon name="check-circle" :size="64" :stroke-width="1.5" />
           </div>
-          <h2 class="success-title">密碼重置成功！</h2>
-          <p class="success-message">您的密碼已成功重置，現在可以使用新密碼登入了</p>
+          <h3 class="neu-success-title">密碼重置成功！</h3>
+          <p class="neu-success-text">您的密碼已成功重置，現在可以使用新密碼登入了</p>
 
-          <!-- Go to Login Button -->
-          <button @click="goToLogin" class="action-btn primary-btn">
+          <button @click="goToLogin" class="neu-btn neu-btn-primary">
             <span>前往登入</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
+            <Icon name="arrow-right" :size="20" />
           </button>
         </div>
       </transition>
@@ -466,487 +390,423 @@ const goToLogin = () => {
 
 <style scoped>
 /* ============================================
-   LAYOUT & CONTAINER
+   NEUMORPHISM FORGOT PASSWORD PAGE
    ============================================ */
-.forgot-password-container {
+.neu-forgot {
   min-height: 100vh;
+  background: var(--neu-bg);
   display: flex;
   flex-direction: column;
-  background: var(--bg-body);
 }
 
-/* ============================================
-   HERO SECTION
-   ============================================ */
-.hero-section {
-  position: relative;
-  background: var(--primary-gradient);
-  padding: 3rem 2rem 2.5rem;
-  overflow: hidden;
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
-  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.25);
+/* --- Header --- */
+.neu-forgot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--neu-bg);
 }
 
-.hero-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.logo-badge {
-  width: 4.5rem;
-  height: 4.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 1.25rem;
+.neu-back-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  color: var(--primary-color);
-  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
+  cursor: pointer;
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.hero-title {
-  font-size: 2rem;
-  font-weight: 800;
+.neu-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-back-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-forgot-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--neu-text);
+}
+
+.neu-header-spacer {
+  width: 2.5rem;
+}
+
+/* --- Hero Section --- */
+.neu-hero {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.neu-hero-icon {
+  width: 5rem;
+  height: 5rem;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
   color: white;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.5px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 8px 8px 20px rgba(20, 184, 166, 0.25),
+              -4px -4px 12px rgba(255, 255, 255, 0.5);
 }
 
-.hero-subtitle {
-  font-size: 1.0625rem;
-  color: rgba(255, 255, 255, 0.95);
+.neu-hero-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--neu-text);
+  margin-bottom: 0.5rem;
+}
+
+.neu-hero-text {
+  font-size: 1rem;
+  color: var(--neu-text-muted);
   font-weight: 500;
-  line-height: 1.6;
 }
 
-/* Decorative Circles */
-.deco-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 1;
-  animation: float 6s ease-in-out infinite;
-}
-
-.deco-1 {
-  width: 180px;
-  height: 180px;
-  top: -70px;
-  right: -50px;
-  animation-delay: 0s;
-}
-
-.deco-2 {
-  width: 120px;
-  height: 120px;
-  bottom: -30px;
-  left: -20px;
-  animation-delay: 1s;
-}
-
-/* ============================================
-   STEP INDICATOR
-   ============================================ */
-.step-indicator {
+/* --- Step Indicator --- */
+.neu-steps {
   display: flex;
   justify-content: space-between;
-  padding: 2rem 2rem 1rem;
-  max-width: 26rem;
+  padding: 0 2rem 1.5rem;
+  max-width: 24rem;
   margin: 0 auto;
-  width: 100%;
   position: relative;
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
 }
 
-.step-indicator::before {
+.neu-steps::before {
   content: '';
   position: absolute;
-  top: 2.875rem;
-  left: calc(16.67% + 1rem);
-  right: calc(16.67% + 1rem);
+  top: 1.125rem;
+  left: calc(16.67% + 1.5rem);
+  right: calc(16.67% + 1.5rem);
   height: 2px;
-  background: var(--border-color);
-  z-index: 0;
+  background: var(--neu-bg-dark);
 }
 
-.step-item {
+.neu-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   flex: 1;
   position: relative;
   z-index: 1;
 }
 
-.step-circle {
-  width: 2.75rem;
-  height: 2.75rem;
+.neu-step-circle {
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
-  background: white;
-  border: 2px solid var(--border-color);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1rem;
-  color: var(--text-muted);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  color: var(--neu-text-muted);
+  transition: all 0.3s ease;
 }
 
-.step-item.active .step-circle {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+.neu-step.active .neu-step-circle {
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+  box-shadow: 4px 4px 10px rgba(20, 184, 166, 0.3),
+              -2px -2px 6px rgba(255, 255, 255, 0.8);
 }
 
-.step-item.completed .step-circle {
-  background: var(--success-color);
-  border-color: var(--success-color);
+.neu-step.completed .neu-step-circle {
+  background: var(--neu-success);
   color: white;
+  box-shadow: var(--neu-shadow-out-sm);
 }
 
-.step-label {
-  font-size: 0.8125rem;
+.neu-step-label {
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted);
-  text-align: center;
-  transition: color 0.3s;
+  color: var(--neu-text-muted);
+  transition: color 0.3s ease;
 }
 
-.step-item.active .step-label {
-  color: var(--primary-color);
+.neu-step.active .neu-step-label {
+  color: var(--neu-primary);
 }
 
-.step-item.completed .step-label {
-  color: var(--success-color);
+.neu-step.completed .neu-step-label {
+  color: var(--neu-success);
 }
 
-/* ============================================
-   FORM SECTION
-   ============================================ */
-.form-section {
+/* --- Form Section --- */
+.neu-form-section {
   flex: 1;
-  padding: 2rem 2rem 3rem;
-  background: var(--bg-body);
+  padding: 1rem 1.5rem 2rem;
 }
 
-.step-form {
-  max-width: 26rem;
+.neu-form {
+  max-width: 24rem;
   margin: 0 auto;
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+  animation: fadeInUp 0.5s ease backwards;
 }
 
-.step-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-main);
+.neu-form-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--neu-text);
+  text-align: center;
   margin-bottom: 0.5rem;
-  text-align: center;
 }
 
-.step-description {
-  font-size: 1rem;
-  color: var(--text-secondary);
+.neu-form-desc {
+  font-size: 0.9375rem;
+  color: var(--neu-text-muted);
+  text-align: center;
   margin-bottom: 2rem;
-  text-align: center;
 }
 
-/* ============================================
-   FORM INPUTS
-   ============================================ */
-.form-group {
-  margin-bottom: 1.75rem;
+/* --- Form Group --- */
+.neu-form-group {
+  margin-bottom: 1.5rem;
 }
 
-.form-label {
+.neu-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.625rem;
   font-weight: 600;
-  font-size: 1rem;
-  color: var(--text-secondary);
-}
-
-.form-label svg {
-  color: var(--primary-color);
-  flex-shrink: 0;
-}
-
-.form-input {
-  width: 100%;
-  padding: 1rem 1.25rem;
-  font-size: 1.0625rem;
-  background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 500;
-  min-height: 3.25rem;
-}
-
-.form-input::placeholder {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.form-input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
-  background: white;
-  transform: translateY(-1px);
-}
-
-.form-input:hover:not(:focus) {
-  border-color: #5eead4;
-}
-
-/* Input Validation States */
-.form-input.error {
-  border-color: var(--error-color);
-  background: #fef2f2;
-}
-
-.form-input.error:focus {
-  border-color: var(--error-color);
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
-}
-
-.form-input.valid {
-  border-color: var(--success-color);
-  background: #f0fdf4;
-}
-
-.form-input.valid:focus {
-  border-color: var(--success-color);
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
-}
-
-/* Error Message */
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-top: 0.5rem;
-  color: var(--error-color);
   font-size: 0.9375rem;
-  font-weight: 500;
+  color: var(--neu-text-muted);
 }
 
-.error-message svg {
-  flex-shrink: 0;
+.neu-label svg {
+  color: var(--neu-primary);
 }
 
-/* Password Input Wrapper */
-.input-wrapper {
+.neu-input-wrapper {
   position: relative;
 }
 
-.input-wrapper .form-input {
+.neu-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 1rem;
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-in);
+  transition: all 0.3s ease;
+}
+
+.neu-input::placeholder {
+  color: var(--neu-text-light);
+  font-weight: 400;
+}
+
+.neu-input:focus {
+  outline: none;
+  box-shadow: var(--neu-shadow-in-deep),
+              0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.neu-input.error {
+  box-shadow: var(--neu-shadow-in),
+              0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.neu-input.valid {
+  box-shadow: var(--neu-shadow-in),
+              0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.neu-input-with-btn .neu-input {
   padding-right: 3.5rem;
 }
 
-.password-toggle {
+.neu-toggle-btn {
   position: absolute;
-  right: 0.625rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  padding: 0.625rem;
+  padding: 0.5rem;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--neu-text-muted);
   border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.neu-toggle-btn:hover {
+  color: var(--neu-primary);
+}
+
+.neu-error {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  color: var(--neu-error);
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-.password-toggle:hover {
-  color: var(--primary-color);
-  background: var(--primary-light);
-}
-
-.password-toggle:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-  color: var(--primary-color);
-}
-
-/* ============================================
-   BUTTONS
-   ============================================ */
-.action-btn {
+/* --- Buttons --- */
+.neu-btn {
   width: 100%;
-  padding: 1.125rem 2rem;
-  font-size: 1.125rem;
+  padding: 1rem 1.5rem;
+  font-size: 1.0625rem;
   font-weight: 700;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 2rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 3.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.primary-btn {
+.neu-btn-primary {
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   color: white;
-  background: var(--primary-gradient);
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1),
+              -4px -4px 10px rgba(255, 255, 255, 0.7),
+              0 4px 16px rgba(20, 184, 166, 0.35);
 }
 
-.primary-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.45);
+.neu-btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.12),
+              -6px -6px 12px rgba(255, 255, 255, 0.8),
+              0 8px 24px rgba(20, 184, 166, 0.45);
 }
 
-.primary-btn:active:not(:disabled) {
+.neu-btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+              inset -2px -2px 4px rgba(255, 255, 255, 0.1);
 }
 
-.primary-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.3), 0 4px 12px rgba(20, 184, 166, 0.35);
-}
-
-.primary-btn:disabled {
+.neu-btn-primary:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
 }
 
-.outline-btn {
-  color: var(--primary-color);
-  background: white;
-  border: 2px solid var(--border-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.neu-btn-outline {
+  background: var(--neu-bg);
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-out);
 }
 
-.outline-btn:hover {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
+.neu-btn-outline:hover {
+  color: var(--neu-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--neu-shadow-out-lg);
 }
 
-.outline-btn:active {
+.neu-btn-outline:active {
   transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
 }
 
-.button-group {
+.neu-btn-group {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
-.button-group .action-btn {
+.neu-btn-group .neu-btn {
   flex: 1;
 }
 
-.loading-content {
+.neu-loading {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
-.spinner {
-  animation: spin 1s linear infinite;
+.neu-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-/* ============================================
-   SUCCESS STEP
-   ============================================ */
-.success-step {
+/* --- Back Link --- */
+.neu-back-link {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--neu-bg-dark);
+  color: var(--neu-text-muted);
+}
+
+.neu-link {
+  color: var(--neu-primary);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.neu-link:hover {
+  color: var(--neu-primary-dark);
+  text-decoration: underline;
+}
+
+/* --- Success Step --- */
+.neu-success {
   text-align: center;
   padding-top: 2rem;
 }
 
-.success-icon {
+.neu-success-icon {
   width: 6rem;
   height: 6rem;
-  background: white;
+  background: var(--neu-bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 2rem;
-  color: var(--success-color);
-  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);
-  animation: successPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin: 0 auto 1.5rem;
+  color: var(--neu-success);
+  box-shadow: var(--neu-shadow-out);
+  animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.success-title {
-  font-size: 2rem;
+.neu-success-title {
+  font-size: 1.75rem;
   font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 1rem;
+  color: var(--neu-text);
+  margin-bottom: 0.75rem;
 }
 
-.success-message {
-  font-size: 1.0625rem;
-  color: var(--text-secondary);
-  margin-bottom: 2.5rem;
+.neu-success-text {
+  font-size: 1rem;
+  color: var(--neu-text-muted);
+  margin-bottom: 2rem;
   line-height: 1.6;
 }
 
-/* ============================================
-   BACK LINK
-   ============================================ */
-.back-link {
-  margin-top: 2rem;
-  text-align: center;
-  font-size: 1.0625rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.prompt-text {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.link-text {
-  color: var(--primary-color);
-  font-weight: 700;
-  text-decoration: none;
-  margin-left: 0.5rem;
-  transition: all 0.2s;
-  display: inline-block;
-}
-
-.link-text:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
-  transform: translateX(2px);
-}
-
-.link-text:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
-/* ============================================
-   TRANSITIONS
-   ============================================ */
+/* --- Transitions --- */
 .step-fade-enter-active,
 .step-fade-leave-active {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -967,30 +827,13 @@ const goToLogin = () => {
   transition: all 0.3s ease;
 }
 
-.error-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-0.5rem);
-}
-
+.error-fade-enter-from,
 .error-fade-leave-to {
   opacity: 0;
   transform: translateY(-0.5rem);
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* --- Animations --- */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -1002,36 +845,11 @@ const goToLogin = () => {
   }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
-  }
-}
-
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes successPopIn {
+@keyframes successPop {
   from {
     opacity: 0;
     transform: scale(0.5);
@@ -1042,50 +860,21 @@ const goToLogin = () => {
   }
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/* --- Responsive --- */
 @media (max-width: 400px) {
-  .hero-section {
-    padding: 2.5rem 1.5rem 2rem;
+  .neu-hero {
+    padding: 1.5rem 1rem;
   }
 
-  .hero-title {
-    font-size: 1.75rem;
+  .neu-hero-title {
+    font-size: 1.5rem;
   }
 
-  .hero-subtitle {
-    font-size: 1rem;
+  .neu-form-section {
+    padding: 1rem 1rem 2rem;
   }
 
-  .step-indicator {
-    padding: 1.5rem 1rem 1rem;
-  }
-
-  .form-section {
-    padding: 1.5rem 1.5rem 2.5rem;
-  }
-
-  .logo-badge {
-    width: 4rem;
-    height: 4rem;
-  }
-
-  .step-circle {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .step-label {
-    font-size: 0.75rem;
-  }
-
-  .action-btn {
-    font-size: 1.0625rem;
-    padding: 1rem 1.5rem;
-  }
-
-  .button-group {
+  .neu-btn-group {
     flex-direction: column;
   }
 }

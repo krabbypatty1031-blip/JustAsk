@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import QuestionFeed from '../components/QuestionFeed.vue'
+import Icon from '../components/Icon.vue'
 import { useRouter } from 'vue-router'
 import { getAvatarUrl } from '../utils/avatar'
 
@@ -11,13 +12,12 @@ const showToast = inject('showToast')
 
 const questions = ref([])
 const isLoading = ref(true)
-const showUserMenu = ref(false) // Toggle for user dropdown
-const fontSizeLevel = ref(0) // 0: 100%, 1: 112.5%, 2: 125%
+const showUserMenu = ref(false)
+const fontSizeLevel = ref(0)
 
 const fetchQuestions = async () => {
   isLoading.value = true
   try {
-    // 稍微延遲以展示骨架屏動畫
     await new Promise(resolve => setTimeout(resolve, 600))
     const response = await axios.get('/questions')
     if (response.data.success) {
@@ -39,15 +39,11 @@ const toggleUserMenu = () => {
 }
 
 const toggleFontSize = () => {
-  // Cycle: 0 -> 1 -> 2 -> 0
   fontSizeLevel.value = (fontSizeLevel.value + 1) % 3
-  
   const levels = ['100%', '112.5%', '125%']
   const size = levels[fontSizeLevel.value]
-  
   document.documentElement.style.setProperty('--app-scale', size)
   localStorage.setItem('user_font_pref', fontSizeLevel.value)
-  
   const labels = ['標準', '大', '特大']
   showToast(`字體已調整為：${labels[fontSizeLevel.value]}`)
 }
@@ -56,10 +52,7 @@ const handleLogout = async () => {
   if (!confirm('確定要登出嗎？')) return
   try {
     await axios.get('/users/logout')
-    // currentUser is provided by App.vue, but it's a ref so we can't mutate it directly here easily 
-    // unless we inject the updater or rely on App.vue's reactivity update on route change/checkStatus.
-    // However, App.vue provides the Ref itself, so we can mutate .value!
-    currentUser.value = null 
+    currentUser.value = null
     showToast('已登出', 'info')
     showUserMenu.value = false
     router.push('/login')
@@ -75,73 +68,80 @@ const goToProfile = () => {
 
 onMounted(() => {
   fetchQuestions()
-  // Sync local state with global pref
   const saved = localStorage.getItem('user_font_pref')
   if (saved) fontSizeLevel.value = parseInt(saved)
 })
 </script>
 
 <template>
-  <div class="min-h-full">
-      <!-- 頂部 Header -->
-    <header class="bg-white px-6 pt-6 pb-4 rounded-b-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.05)] mb-6">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-extrabold bg-gradient-to-br from-primary-500 to-cyan-500 bg-clip-text text-transparent tracking-tighter">吾識JustAsk</h1>
-        <div class="flex items-center gap-4">
-           <!-- Font Size Toggle -->
-           <button 
-             class="w-12 h-12 rounded-full bg-white border border-primary-100 flex items-center justify-center shadow-sm transition-all hover:border-primary-500 hover:scale-105 active:scale-95 active:bg-slate-50" 
-             @click="toggleFontSize" 
-             aria-label="調整字體大小"
-             :aria-pressed="false"
-           >
-              <span class="font-serif text-slate-900 leading-none transition-all" 
-                    :class="{ 'text-base font-semibold': fontSizeLevel === 0, 'text-lg font-bold': fontSizeLevel === 1, 'text-xl font-black text-primary-600': fontSizeLevel === 2 }">Aa</span>
+  <div class="neu-home">
+    <!-- Header -->
+    <header class="neu-header">
+      <div class="neu-header-top">
+        <h1 class="neu-brand">吾識JustAsk</h1>
+        <div class="neu-header-actions">
+          <!-- Font Size Toggle -->
+          <button
+            class="neu-icon-btn"
+            @click="toggleFontSize"
+            :aria-label="`調整字體大小，當前: ${['標準', '大', '特大'][fontSizeLevel]}`"
+          >
+            <span class="neu-font-size" :class="{ 'neu-font-lg': fontSizeLevel === 1, 'neu-font-xl': fontSizeLevel === 2 }">Aa</span>
+          </button>
+
+          <!-- User Avatar -->
+          <div class="neu-avatar-wrapper" v-if="currentUser">
+            <button
+              class="neu-avatar-btn"
+              @click="toggleUserMenu"
+              :aria-label="`用戶選單，${currentUser.username}`"
+              :aria-expanded="showUserMenu"
+            >
+              <img :src="getAvatarUrl(currentUser.username)" :alt="`${currentUser.username} 的頭像`" />
             </button>
 
-            <!-- 如果已登入，顯示小頭像（模擬） -->
-            <div class="relative" v-if="currentUser">
-              <img 
-                :src="getAvatarUrl(currentUser.username)" 
-                class="w-12 h-12 rounded-full object-cover bg-white cursor-pointer border-[3px] border-white shadow-md hover:scale-105 transition-transform" 
-                @click="toggleUserMenu"
-                alt="Me"
-              />
-              <!-- Dropdown Menu -->
-              <transition name="fade">
-                <div v-if="showUserMenu" class="absolute top-[60px] right-0 bg-white min-w-[180px] rounded-2xl shadow-xl py-3 z-50 border border-slate-100">
-                  <div class="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t border-slate-100"></div>
-                  <div class="px-5 py-3 flex items-center gap-3 text-slate-900 text-lg font-medium cursor-pointer hover:bg-slate-50 transition-colors" @click="goToProfile">
-                    <span>👤</span> 我的檔案
-                  </div>
-                  <div class="h-px bg-slate-100 my-2"></div>
-                  <div class="px-5 py-3 flex items-center gap-3 text-red-500 text-lg font-semibold cursor-pointer hover:bg-red-50 transition-colors" @click="handleLogout">
-                    <span>🚪</span> 退出登入
-                  </div>
-                </div>
-              </transition>
-            </div>
-            <button v-else class="px-6 py-3 bg-slate-50 border-2 border-slate-200 rounded-full font-bold text-lg text-slate-900 transition-all hover:bg-white hover:border-primary-500 hover:text-primary-600" @click="router.push('/login')">
-              登入
-            </button>
+            <!-- Dropdown -->
+            <transition name="dropdown">
+              <div v-if="showUserMenu" class="neu-dropdown" role="menu">
+                <button class="neu-dropdown-item" @click="goToProfile" role="menuitem">
+                  <Icon name="user" :size="18" />
+                  我的檔案
+                </button>
+                <div class="neu-dropdown-divider"></div>
+                <button class="neu-dropdown-item neu-dropdown-danger" @click="handleLogout" role="menuitem">
+                  <Icon name="arrow-right-on-rectangle" :size="18" />
+                  退出登入
+                </button>
+              </div>
+            </transition>
+          </div>
+
+          <!-- Login Button -->
+          <button v-else class="neu-login-btn" @click="router.push('/login')">
+            登入
+          </button>
         </div>
       </div>
-      
-      <!-- 搜索/歡迎卡片 -->
-      <div class="relative bg-gradient-to-br from-primary-500 to-cyan-500 rounded-[2rem] p-8 text-white shadow-[0_12px_30px_rgba(255,82,82,0.25)] overflow-hidden">
-        <div class="relative z-10">
-          <h2 class="text-2xl font-extrabold mb-2">{{ currentUser ? `早安，${currentUser.username}！` : '歡迎來到 吾識JustAsk' }}</h2>
-          <p class="text-lg font-medium opacity-95">今天想知道些什麼？</p>
+
+      <!-- Welcome Card -->
+      <div class="neu-welcome-card">
+        <div class="neu-welcome-content">
+          <h2 class="neu-welcome-title">{{ currentUser ? `早安，${currentUser.username}！` : '歡迎來到 吾識JustAsk' }}</h2>
+          <p class="neu-welcome-text">今天想知道些什麼？</p>
         </div>
-        <div class="absolute -right-2 -bottom-5 text-8xl opacity-25 rotate-12 select-none">🌟</div>
+        <div class="neu-welcome-icon" aria-hidden="true">
+          <Icon name="sparkles" :size="80" :stroke-width="1.5" />
+        </div>
       </div>
     </header>
 
-    <!-- 內容區域 -->
-    <section class="pb-6">
-      <div class="px-6 mb-4 flex justify-between items-center">
-        <h3 class="text-2xl font-extrabold text-slate-900">最新動態</h3>
-        <span class="text-2xl text-slate-400 cursor-pointer p-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors">🔄</span>
+    <!-- Content -->
+    <section class="neu-content">
+      <div class="neu-section-header">
+        <h3 class="neu-section-title">最新動態</h3>
+        <button class="neu-refresh-btn" @click="fetchQuestions" aria-label="重新整理問題列表">
+          <Icon name="arrow-path" :size="20" />
+        </button>
       </div>
       <QuestionFeed />
     </section>
@@ -149,15 +149,278 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Dropdown Transition */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+/* ============================================
+   NEUMORPHISM HOME PAGE
+   ============================================ */
+.neu-home {
+  min-height: 100vh;
+  background: var(--neu-bg);
 }
 
-.fade-enter-from,
-.fade-leave-to {
+/* Header */
+.neu-header {
+  padding: 1.5rem 1.5rem 2rem;
+}
+
+.neu-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.neu-brand {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--neu-primary);
+  letter-spacing: -0.5px;
+}
+
+.neu-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Icon Button */
+.neu-icon-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+  color: var(--neu-text);
+}
+
+.neu-icon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-icon-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-font-size {
+  font-family: serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.neu-font-lg {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.neu-font-xl {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--neu-primary);
+}
+
+/* Avatar */
+.neu-avatar-wrapper {
+  position: relative;
+}
+
+.neu-avatar-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.neu-avatar-btn:hover {
+  transform: scale(1.05);
+}
+
+.neu-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Dropdown */
+.neu-dropdown {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  min-width: 10rem;
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  box-shadow: var(--neu-shadow-out);
+  z-index: 100;
+}
+
+.neu-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--neu-text);
+  background: none;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.neu-dropdown-item:hover {
+  background: var(--neu-bg-dark);
+}
+
+.neu-dropdown-item:active {
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-dropdown-danger {
+  color: var(--neu-error);
+}
+
+.neu-dropdown-danger:hover {
+  background: #fef2f2;
+}
+
+.neu-dropdown-divider {
+  height: 1px;
+  background: var(--neu-bg-dark);
+  margin: 0.375rem 0;
+}
+
+/* Login Button */
+.neu-login-btn {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--neu-text);
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+}
+
+.neu-login-btn:hover {
+  transform: translateY(-2px);
+  color: var(--neu-primary);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-login-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+/* Welcome Card */
+.neu-welcome-card {
+  position: relative;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  color: white;
+  overflow: hidden;
+  box-shadow: 8px 8px 20px rgba(20, 184, 166, 0.25),
+              -4px -4px 12px rgba(255, 255, 255, 0.5);
+}
+
+.neu-welcome-content {
+  position: relative;
+  z-index: 2;
+}
+
+.neu-welcome-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.375rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.neu-welcome-text {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+.neu-welcome-icon {
+  position: absolute;
+  right: -1rem;
+  bottom: -1.5rem;
+  opacity: 0.2;
+  transform: rotate(12deg);
+}
+
+/* Content Section */
+.neu-content {
+  padding: 0 1.5rem 2rem;
+}
+
+.neu-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.neu-section-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--neu-text);
+}
+
+.neu-refresh-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+}
+
+.neu-refresh-btn:hover {
+  color: var(--neu-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+/* Dropdown Transition */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 </style>

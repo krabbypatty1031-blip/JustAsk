@@ -2,6 +2,7 @@
 import { ref, onMounted, provide } from 'vue'
 import axios from './api/axios'
 import { useRouter, useRoute } from 'vue-router'
+import Icon from './components/Icon.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,7 +30,6 @@ const checkStatus = async () => {
 
 router.afterEach(() => { checkStatus() })
 
-// 全局字體大小初始化
 const initFontSize = () => {
   const savedLevel = localStorage.getItem('user_font_pref')
   if (savedLevel) {
@@ -47,25 +47,22 @@ onMounted(() => {
 })
 
 const navItems = [
-  { 
-    label: '首頁', 
-    path: '/', 
-    // Home Icon
-    iconSvg: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>' 
+  {
+    label: '首頁',
+    path: '/',
+    icon: 'home'
   },
-  { 
-    label: '提問', 
-    path: '/ask', 
+  {
+    label: '提問',
+    path: '/ask',
     special: true,
-    // Question Mark Icon for "Ask"
-    iconSvg: '<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line>'
+    icon: 'question-mark-circle'
   },
-  { 
-    label: '我的', 
-    path: '/profile', 
-    activePath: ['/login', '/register', '/profile', '/forgot-password'], 
-    // User Icon
-    iconSvg: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>' 
+  {
+    label: '我的',
+    path: '/profile',
+    activePath: ['/login', '/register', '/profile', '/forgot-password'],
+    icon: 'user'
   }
 ]
 
@@ -84,8 +81,9 @@ const handleNavClick = (item) => {
 </script>
 
 <template>
-  <div class="flex flex-col h-screen bg-primary-50 pt-[var(--sat)] pb-[var(--sab)]">
-    <main class="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(7rem+var(--sab))] scrollbar-hide">
+  <div class="neu-app">
+    <main class="neu-main"
+          :class="{ 'has-nav': !['/login', '/register', '/forgot-password', '/ask'].includes(route.path) && !route.path.startsWith('/question/') }">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
           <component :is="Component" />
@@ -93,58 +91,239 @@ const handleNavClick = (item) => {
       </router-view>
     </main>
 
-    <nav v-if="!['/login', '/register', '/forgot-password', '/ask'].includes(route.path) && !route.path.startsWith('/question/')" 
-         class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] h-[calc(6.5rem+var(--sab))] pb-[var(--sab)] bg-white/90 backdrop-blur-md border-t border-primary-100 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 rounded-t-3xl">
-      <div 
-        v-for="item in navItems" 
-        :key="item.path"
-        class="flex flex-col items-center justify-center text-slate-400 transition-all duration-200 flex-1 h-full cursor-pointer pb-1 min-w-[4rem] hover:text-slate-600"
-        :class="{ 'text-primary-500 font-bold': isRouteActive(item), 'relative -top-6': item.special }"
-        @click="handleNavClick(item)"
-      >
-        <div class="mb-1 flex items-center justify-center transition-transform duration-200"
-             :class="{ 'w-[4.5rem] h-[4.5rem] rounded-full text-white shadow-lg border-4 border-white bg-gradient-to-br from-primary-500 to-cyan-500 hover:scale-105 active:scale-95': item.special }">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            :width="item.special ? 32 : 28" 
-            :height="item.special ? 32 : 28" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            stroke-width="2" 
-            stroke-linecap="round" 
-            stroke-linejoin="round"
-            v-html="item.iconSvg"
-          >
-          </svg>
-        </div>
-        <span class="text-xs font-bold tracking-wide" :class="{ 'mt-2 text-slate-800 text-sm': item.special }">{{ item.label }}</span>
+    <!-- Neumorphic Bottom Navigation -->
+    <nav v-if="!['/login', '/register', '/forgot-password', '/ask'].includes(route.path) && !route.path.startsWith('/question/')"
+         class="neu-nav"
+         role="navigation"
+         aria-label="主要導航"
+    >
+      <div class="neu-nav-inner">
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="neu-nav-btn"
+          :class="{
+            'active': isRouteActive(item),
+            'special': item.special
+          }"
+          @click="handleNavClick(item)"
+          :aria-label="`前往${item.label}`"
+          :aria-current="isRouteActive(item) ? 'page' : undefined"
+        >
+          <div class="neu-nav-icon" :class="{ 'special-icon': item.special }">
+            <Icon
+              :name="item.icon"
+              :size="item.special ? 28 : 24"
+              :stroke-width="2"
+            />
+          </div>
+          <span class="neu-nav-label">{{ item.label }}</span>
+        </button>
       </div>
     </nav>
 
+    <!-- Neumorphic Toast -->
     <transition name="toast">
-      <div v-if="toast.show" 
-           class="fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-lg font-semibold z-[2000] shadow-xl flex items-center max-w-[90%] text-center border-2 border-white/30 backdrop-blur-sm"
-           :class="toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-slate-800 text-white'">
-        {{ toast.message }}
+      <div v-if="toast.show"
+           class="neu-toast"
+           :class="{ 'error': toast.type === 'error', 'success': toast.type === 'success' }"
+           role="alert">
+        <Icon :name="toast.type === 'error' ? 'exclamation-circle' : toast.type === 'success' ? 'check-circle' : 'information-circle'" :size="20" />
+        <span>{{ toast.message }}</span>
       </div>
     </transition>
   </div>
 </template>
 
 <style>
-.toast-enter-active, .toast-leave-active {
+/* ============================================
+   NEUMORPHISM APP SHELL
+   ============================================ */
+.neu-app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--neu-bg);
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+}
+
+.neu-main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.neu-main.has-nav {
+  padding-bottom: calc(6rem + var(--sab));
+}
+
+/* --- Bottom Navigation --- */
+.neu-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--neu-bg);
+  padding: 0.75rem 1rem calc(1rem + var(--sab));
+  z-index: 50;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.neu-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.neu-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 4rem;
+}
+
+.neu-nav-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  transition: all 0.3s ease;
+}
+
+.neu-nav-btn:hover .neu-nav-icon {
+  color: var(--neu-primary);
+}
+
+.neu-nav-btn.active .neu-nav-icon {
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-in);
+  color: var(--neu-primary);
+}
+
+/* Special Center Button */
+.neu-nav-btn.special {
+  position: relative;
+  top: -0.75rem;
+}
+
+.neu-nav-btn.special .neu-nav-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
+              -3px -3px 8px rgba(255, 255, 255, 0.8),
+              0 4px 16px rgba(20, 184, 166, 0.35);
+}
+
+.neu-nav-btn.special:hover .neu-nav-icon {
+  transform: scale(1.08);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.15),
+              -4px -4px 10px rgba(255, 255, 255, 0.8),
+              0 6px 20px rgba(20, 184, 166, 0.45);
+}
+
+.neu-nav-btn.special:active .neu-nav-icon {
+  transform: scale(0.95);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+              inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.neu-nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
+  transition: color 0.2s ease;
+}
+
+.neu-nav-btn:hover .neu-nav-label,
+.neu-nav-btn.active .neu-nav-label {
+  color: var(--neu-primary);
+}
+
+.neu-nav-btn.special .neu-nav-label {
+  font-weight: 700;
+  color: var(--neu-text);
+}
+
+/* --- Toast Notification --- */
+.neu-toast {
+  position: fixed;
+  top: calc(1.5rem + var(--sat));
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  background: var(--neu-bg);
+  padding: 0.875rem 1.5rem;
+  border-radius: 2rem;
+  box-shadow: var(--neu-shadow-out),
+              0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--neu-text);
+  z-index: 2000;
+}
+
+.neu-toast.error {
+  color: var(--neu-error);
+}
+
+.neu-toast.success {
+  color: var(--neu-success);
+}
+
+/* --- Transitions --- */
+.toast-enter-active,
+.toast-leave-active {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.toast-enter-from, .toast-leave-to {
+.toast-enter-from,
+.toast-leave-to {
   opacity: 0;
-  transform: translate(-50%, -1.25rem) scale(0.9);
+  transform: translate(-50%, -1.5rem) scale(0.9);
 }
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(5px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+/* --- Scrollbar Hide --- */
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

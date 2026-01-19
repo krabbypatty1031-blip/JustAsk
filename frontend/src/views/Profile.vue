@@ -3,33 +3,31 @@ import { ref, onMounted, inject } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
 import { getAvatarUrl } from '../utils/avatar'
+import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 const currentUser = inject('currentUser')
 const showToast = inject('showToast')
 
-const activeTab = ref('questions') // 'questions' | 'answers'
+const activeTab = ref('questions')
 const myQuestions = ref([])
-const myAnsweredQuestions = ref([]) // Questions where I posted an answer
+const myAnsweredQuestions = ref([])
 const isLoading = ref(true)
 
-// --- Data Fetching ---
 const fetchMyData = async () => {
   if (!currentUser.value) return
   isLoading.value = true
-  
+
   try {
     const response = await axios.get('/questions')
     if (response.data.success) {
       const allQuestions = response.data.questions
       const userId = currentUser.value.id || currentUser.value._id
 
-      // Filter My Questions (support both old and new format)
       myQuestions.value = allQuestions.filter(q =>
         q.authorId === userId || q.author?.id === userId || q.author?._id === userId
       )
 
-      // Filter My Answers (support both old and new format)
       myAnsweredQuestions.value = allQuestions.filter(q =>
         q.answers && q.answers.some(a => a.authorId === userId || a.author?.id === userId || a.author?._id === userId)
       )
@@ -41,7 +39,6 @@ const fetchMyData = async () => {
   }
 }
 
-// Load data
 onMounted(() => {
   if (!currentUser.value) {
     router.push('/login')
@@ -50,7 +47,6 @@ onMounted(() => {
   }
 })
 
-// --- Actions ---
 const handleLogout = async () => {
   if (!confirm('確定要登出嗎？')) return
   try {
@@ -78,122 +74,163 @@ const getGreeting = () => {
 </script>
 
 <template>
-  <div class="profile-view">
-    <!-- Header Area -->
-    <div class="profile-header">
-      <div class="user-card" v-if="currentUser">
-        <div class="avatar-wrapper">
-          <img :src="getAvatarUrl(currentUser.username)" class="avatar-lg" alt="Profile" />
-          <div class="online-badge"></div>
+  <div class="neu-profile">
+    <!-- Header Card -->
+    <header class="neu-profile-header" v-if="currentUser">
+      <div class="neu-user-card">
+        <div class="neu-avatar-wrapper">
+          <div class="neu-avatar-ring">
+            <img :src="getAvatarUrl(currentUser.username)" class="neu-avatar" alt="Profile" />
+          </div>
+          <div class="neu-online-dot"></div>
         </div>
-        <div class="texts">
-          <h1 class="username">{{ currentUser.username }}</h1>
-          <p class="greeting">{{ getGreeting() }}，今天想分享什麼嗎？</p>
-          <div class="badges">
-            <span class="badge">🌟 熱心鄰居</span>
-            <span class="badge">📝 記錄達人</span>
+        <div class="neu-user-info">
+          <h1 class="neu-username">{{ currentUser.username }}</h1>
+          <p class="neu-greeting">{{ getGreeting() }}，今天想分享什麼嗎？</p>
+          <div class="neu-badges">
+            <span class="neu-badge">
+              <Icon name="sparkles" :size="14" />
+              熱心鄰居
+            </span>
+            <span class="neu-badge">
+              <Icon name="document-text" :size="14" />
+              記錄達人
+            </span>
           </div>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- Stats / Actions Grid -->
-    <div class="quick-stats">
-      <div 
-        class="stat-card" 
-        :class="{ active: activeTab === 'questions' }"
+    <!-- Stats Tabs -->
+    <div class="neu-stats-grid">
+      <button
+        class="neu-stat-card"
+        :class="{ 'active': activeTab === 'questions' }"
         @click="activeTab = 'questions'"
       >
-        <div class="stat-icon">❓</div>
-        <div class="stat-info">
-          <span class="stat-num">{{ myQuestions.length }}</span>
-          <span class="stat-label">我的提問</span>
+        <div class="neu-stat-icon">
+          <Icon name="question-mark-circle" :size="24" />
         </div>
-      </div>
-      <div 
-        class="stat-card"
-        :class="{ active: activeTab === 'answers' }"
+        <div class="neu-stat-info">
+          <span class="neu-stat-num">{{ myQuestions.length }}</span>
+          <span class="neu-stat-label">我的提問</span>
+        </div>
+      </button>
+      <button
+        class="neu-stat-card"
+        :class="{ 'active': activeTab === 'answers' }"
         @click="activeTab = 'answers'"
       >
-        <div class="stat-icon">💡</div>
-        <div class="stat-info">
-          <span class="stat-num">{{ myAnsweredQuestions.length }}</span>
-          <span class="stat-label">我的回答</span>
+        <div class="neu-stat-icon">
+          <Icon name="light-bulb" :size="24" />
         </div>
-      </div>
+        <div class="neu-stat-info">
+          <span class="neu-stat-num">{{ myAnsweredQuestions.length }}</span>
+          <span class="neu-stat-label">我的回答</span>
+        </div>
+      </button>
     </div>
 
-    <!-- Content Area -->
-    <div class="content-section">
-      <h3 class="section-title">
+    <!-- Content Section -->
+    <section class="neu-content-section">
+      <h3 class="neu-section-title">
         {{ activeTab === 'questions' ? '我的提問記錄' : '我的回答記錄' }}
       </h3>
-      
-      <div v-if="isLoading" class="loading-state">
-        <div class="spinner"></div>
+
+      <!-- Loading State -->
+      <div v-if="isLoading" class="neu-loading-state">
+        <span class="neu-spinner"></span>
         <p>正在整理您的記錄...</p>
       </div>
-      
-      <div v-else class="list-container">
-        <!-- Questions List -->
-        <div v-if="activeTab === 'questions'">
-          <div v-if="myQuestions.length === 0" class="empty-state">
-            <div class="empty-icon">📝</div>
-            <p>您還沒有發布過問題</p>
-            <button class="btn btn-primary btn-sm" @click="router.push('/ask')">去提問</button>
+
+      <!-- Questions List -->
+      <div v-else-if="activeTab === 'questions'" class="neu-list">
+        <div v-if="myQuestions.length === 0" class="neu-empty-state">
+          <div class="neu-empty-icon">
+            <Icon name="document-text" :size="48" :stroke-width="1.5" />
           </div>
-          <transition-group name="list">
-            <div 
-              v-for="q in myQuestions" 
-              :key="q._id" 
-              class="record-card"
-              @click="navigateToQuestion(q._id)"
-            >
-              <div class="card-icon">📄</div>
-              <div class="card-content">
-                <div class="card-title">{{ q.title }}</div>
-                <div class="card-meta">
-                  <span>📅 {{ new Date(q.createdAt).toLocaleDateString() }}</span>
-                  <span>💬 {{ q.answers.length }} 條回答</span>
-                </div>
-              </div>
-              <div class="card-arrow">›</div>
-            </div>
-          </transition-group>
+          <p>您還沒有發布過問題</p>
+          <button class="neu-btn neu-btn-primary-sm" @click="router.push('/ask')">
+            <Icon name="plus" :size="18" />
+            去提問
+          </button>
         </div>
 
-        <!-- Answers List -->
-        <div v-if="activeTab === 'answers'">
-          <div v-if="myAnsweredQuestions.length === 0" class="empty-state">
-            <div class="empty-icon">💬</div>
-            <p>您還沒有回答過問題</p>
-            <button class="btn btn-outline btn-sm" @click="router.push('/')">去逛逛</button>
-          </div>
-          <transition-group name="list">
-            <div 
-              v-for="q in myAnsweredQuestions" 
-              :key="q._id" 
-              class="record-card answer-type"
-              @click="navigateToQuestion(q._id)"
-            >
-              <div class="card-icon">🙋</div>
-              <div class="card-content">
-                <div class="card-tag">我參與了回答</div>
-                <div class="card-title">{{ q.title }}</div>
-                <div class="card-meta">
-                  <span>提問者: {{ q.authorName || q.author?.username || '匿名用戶' }}</span>
-                </div>
-              </div>
-              <div class="card-arrow">›</div>
+        <transition-group name="list">
+          <article
+            v-for="q in myQuestions"
+            :key="q._id"
+            class="neu-record-card"
+            @click="navigateToQuestion(q._id)"
+          >
+            <div class="neu-record-icon">
+              <Icon name="document-text" :size="22" />
             </div>
-          </transition-group>
-        </div>
+            <div class="neu-record-content">
+              <h4 class="neu-record-title">{{ q.title }}</h4>
+              <div class="neu-record-meta">
+                <span>
+                  <Icon name="calendar" :size="14" />
+                  {{ new Date(q.createdAt).toLocaleDateString() }}
+                </span>
+                <span>
+                  <Icon name="chat-bubble-left-ellipsis" :size="14" />
+                  {{ q.answers.length }} 條回答
+                </span>
+              </div>
+            </div>
+            <div class="neu-record-arrow">
+              <Icon name="chevron-right" :size="20" />
+            </div>
+          </article>
+        </transition-group>
       </div>
-    </div>
+
+      <!-- Answers List -->
+      <div v-else-if="activeTab === 'answers'" class="neu-list">
+        <div v-if="myAnsweredQuestions.length === 0" class="neu-empty-state">
+          <div class="neu-empty-icon">
+            <Icon name="chat-bubble-left-ellipsis" :size="48" :stroke-width="1.5" />
+          </div>
+          <p>您還沒有回答過問題</p>
+          <button class="neu-btn neu-btn-outline-sm" @click="router.push('/')">
+            <Icon name="arrow-right" :size="18" />
+            去逛逛
+          </button>
+        </div>
+
+        <transition-group name="list">
+          <article
+            v-for="q in myAnsweredQuestions"
+            :key="q._id"
+            class="neu-record-card answer-type"
+            @click="navigateToQuestion(q._id)"
+          >
+            <div class="neu-record-icon answer-icon">
+              <Icon name="hand-raised" :size="22" />
+            </div>
+            <div class="neu-record-content">
+              <span class="neu-record-tag">我參與了回答</span>
+              <h4 class="neu-record-title">{{ q.title }}</h4>
+              <div class="neu-record-meta">
+                <span>
+                  <Icon name="user" :size="14" />
+                  {{ q.authorName || q.author?.username || '匿名用戶' }}
+                </span>
+              </div>
+            </div>
+            <div class="neu-record-arrow">
+              <Icon name="chevron-right" :size="20" />
+            </div>
+          </article>
+        </transition-group>
+      </div>
+    </section>
 
     <!-- Logout Button -->
-    <div class="logout-area">
-      <button class="btn btn-logout" @click="handleLogout">
+    <div class="neu-logout-section">
+      <button class="neu-logout-btn" @click="handleLogout">
+        <Icon name="arrow-right-on-rectangle" :size="20" />
         退出登入
       </button>
     </div>
@@ -201,271 +238,410 @@ const getGreeting = () => {
 </template>
 
 <style scoped>
-.profile-view {
+/* ============================================
+   NEUMORPHISM PROFILE PAGE
+   ============================================ */
+.neu-profile {
   min-height: 100vh;
-  padding-bottom: 2.5rem;
-  background: var(--bg-body);
+  background: var(--neu-bg);
+  padding-bottom: 2rem;
 }
 
 /* --- Header Card --- */
-.profile-header {
-  background: var(--primary-gradient);
-  padding: 3rem 1.5rem 4rem; /* Extra bottom padding for overlap */
+.neu-profile-header {
+  padding: 2rem 1.5rem;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   border-bottom-left-radius: 2rem;
   border-bottom-right-radius: 2rem;
-  color: white;
-  box-shadow: var(--shadow-md);
+  box-shadow: 8px 8px 20px rgba(20, 184, 166, 0.25),
+              -4px -4px 12px rgba(255, 255, 255, 0.5);
 }
 
-.user-card {
+.neu-user-card {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.avatar-wrapper {
+.neu-avatar-wrapper {
   position: relative;
 }
 
-.avatar-lg {
-  width: 5.5rem;
-  height: 5.5rem;
+.neu-avatar-ring {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: var(--neu-bg);
+  padding: 4px;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.15),
+              -2px -2px 6px rgba(255, 255, 255, 0.5);
+}
+
+.neu-avatar {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  background: #fff;
-  border: 4px solid rgba(255,255,255,0.3);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.online-badge {
+.neu-online-dot {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 16px;
-  height: 16px;
-  background: #22c55e;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  background: var(--neu-success);
   border: 3px solid white;
   border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.texts .username {
-  font-size: 2rem;
+.neu-user-info {
+  flex: 1;
+}
+
+.neu-username {
+  font-size: 1.75rem;
   font-weight: 800;
+  color: white;
   margin-bottom: 0.25rem;
   letter-spacing: -0.5px;
 }
 
-.texts .greeting {
-  font-size: 1.125rem;
-  opacity: 0.95;
+.neu-greeting {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
   margin-bottom: 0.75rem;
 }
 
-.badges {
+.neu-badges {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.badge {
-  background: rgba(255,255,255,0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
+.neu-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.375rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  color: white;
   backdrop-filter: blur(4px);
 }
 
-/* --- Quick Stats Grid (Tabs) --- */
-.quick-stats {
+/* --- Stats Grid --- */
+.neu-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   padding: 0 1.5rem;
-  margin-top: -2.5rem; /* Overlap effect */
-  margin-bottom: 2rem;
+  margin-top: -1.5rem;
+  position: relative;
+  z-index: 10;
 }
 
-.stat-card {
-  background: white;
-  border-radius: var(--radius-lg);
+.neu-stat-card {
+  background: var(--neu-bg);
+  border-radius: 1.25rem;
   padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
+  box-shadow: var(--neu-shadow-out);
+  border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.3s ease;
+  text-align: left;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.neu-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--neu-shadow-out-lg);
 }
 
-.stat-card.active {
-  border-color: var(--primary-color);
-  background: #FFFBF7; /* Very light warm bg */
+.neu-stat-card:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
 }
 
-.stat-icon {
-  font-size: 1.75rem;
-  background: var(--bg-input);
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
+.neu-stat-card.active {
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-stat-card.active .neu-stat-icon {
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.neu-stat-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--neu-text-muted);
+  transition: all 0.3s ease;
 }
 
-.stat-info {
+.neu-stat-info {
   display: flex;
   flex-direction: column;
 }
 
-.stat-num {
+.neu-stat-num {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--neu-text);
   line-height: 1.2;
 }
 
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+.neu-stat-label {
+  font-size: 0.8125rem;
+  color: var(--neu-text-muted);
   font-weight: 600;
 }
 
 /* --- Content Section --- */
-.content-section {
-  padding: 0 1.5rem;
+.neu-content-section {
+  padding: 2rem 1.5rem 0;
 }
 
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
+.neu-section-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--neu-text);
   margin-bottom: 1rem;
-  padding-left: 0.5rem;
-  border-left: 4px solid var(--primary-color);
+  padding-left: 0.75rem;
+  border-left: 4px solid var(--neu-primary);
 }
 
-.list-container {
+.neu-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
-.record-card {
-  background: white;
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+/* --- Record Card --- */
+.neu-record-card {
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  padding: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--neu-shadow-out);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
-.record-card:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-md);
+.neu-record-card:hover {
   transform: translateX(4px);
+  box-shadow: var(--neu-shadow-out-lg);
 }
 
-.card-icon {
-  font-size: 1.5rem;
-  opacity: 0.8;
+.neu-record-card:active {
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-record-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neu-primary);
   flex-shrink: 0;
 }
 
-.card-content {
+.neu-record-icon.answer-icon {
+  color: var(--neu-warning);
+}
+
+.neu-record-content {
   flex: 1;
-  min-width: 0; /* Text truncation fix */
+  min-width: 0;
 }
 
-.card-tag {
+.neu-record-tag {
   display: inline-block;
-  font-size: 0.75rem;
-  color: var(--secondary-color);
-  background: #fff3e0;
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-  margin-bottom: 0.375rem;
+  font-size: 0.6875rem;
   font-weight: 700;
+  color: var(--neu-warning);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
 }
 
-.card-title {
-  font-size: 1.125rem;
+.neu-record-title {
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 0.5rem;
+  color: var(--neu-text);
+  margin-bottom: 0.375rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.card-meta {
+.neu-record-meta {
   display: flex;
   gap: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  font-size: 0.8125rem;
+  color: var(--neu-text-muted);
+  font-weight: 500;
 }
 
-.card-arrow {
-  color: var(--text-light);
-  font-size: 1.5rem;
-  font-weight: 300;
+.neu-record-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
-.empty-state {
+.neu-record-arrow {
+  color: var(--neu-text-light);
+  transition: transform 0.2s ease;
+}
+
+.neu-record-card:hover .neu-record-arrow {
+  transform: translateX(4px);
+  color: var(--neu-primary);
+}
+
+/* --- Empty & Loading States --- */
+.neu-empty-state {
   text-align: center;
-  padding: 3rem 1rem;
-  background: rgba(255,255,255,0.5);
-  border-radius: var(--radius-lg);
+  padding: 3rem 1.5rem;
+  background: var(--neu-bg);
+  border-radius: 1.25rem;
+  box-shadow: var(--neu-shadow-in);
 }
 
-.empty-icon {
-  font-size: 3rem;
+.neu-empty-icon {
+  color: var(--neu-text-light);
   margin-bottom: 1rem;
   opacity: 0.5;
 }
 
-.loading-state {
+.neu-empty-state p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.neu-loading-state {
   text-align: center;
   padding: 3rem;
-  color: var(--text-secondary);
+  color: var(--neu-text-muted);
 }
 
-/* --- Logout --- */
-.logout-area {
-  padding: 2rem 1.5rem;
+.neu-loading-state p {
   margin-top: 1rem;
-}
-
-.btn-logout {
-  width: 100%;
-  background: white;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 1rem;
-  border-radius: var(--radius-lg);
   font-weight: 600;
-  font-size: 1.125rem;
-  transition: all 0.2s;
 }
 
-.btn-logout:hover {
-  background: #fff1f2;
-  border-color: #fda4af;
-  color: #e11d48;
+.neu-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--neu-bg-dark);
+  border-top-color: var(--neu-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-/* Transitions */
+/* --- Buttons --- */
+.neu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.neu-btn-primary-sm {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1),
+              -2px -2px 6px rgba(255, 255, 255, 0.7),
+              0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.neu-btn-primary-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.12),
+              -4px -4px 10px rgba(255, 255, 255, 0.8),
+              0 6px 16px rgba(20, 184, 166, 0.4);
+}
+
+.neu-btn-outline-sm {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  background: var(--neu-bg);
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-btn-outline-sm:hover {
+  color: var(--neu-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out-lg);
+}
+
+/* --- Logout Section --- */
+.neu-logout-section {
+  padding: 2rem 1.5rem;
+}
+
+.neu-logout-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.neu-logout-btn:hover {
+  color: var(--neu-error);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out-lg);
+}
+
+.neu-logout-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+/* --- Transitions --- */
 .list-enter-active,
 .list-leave-active {
   transition: all 0.3s ease;
@@ -474,5 +650,38 @@ const getGreeting = () => {
 .list-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Responsive --- */
+@media (max-width: 400px) {
+  .neu-profile-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .neu-username {
+    font-size: 1.5rem;
+  }
+
+  .neu-stats-grid {
+    padding: 0 1rem;
+  }
+
+  .neu-content-section {
+    padding: 1.5rem 1rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

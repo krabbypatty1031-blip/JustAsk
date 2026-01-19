@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
   --color-primary-50: #f0fdfa;
@@ -25,7 +26,7 @@
 
   --color-slate-850: #1e293b;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 15px rgba(20, 184, 166, 0.3);
@@ -37,8 +38,32 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
-  
+
   --app-scale: 100%;
+
+  /* ============================================
+     NEUMORPHISM DESIGN SYSTEM
+     Soft UI with realistic depth and shadows
+     ============================================ */
+  --neu-bg: #EFEEEE;
+  --neu-bg-dark: #E0DFDF;
+  --neu-bg-light: #FFFFFF;
+  --neu-primary: #14b8a6;
+  --neu-primary-dark: #0d9488;
+  --neu-primary-light: #5eead4;
+  --neu-text: #334155;
+  --neu-text-muted: #64748b;
+  --neu-text-light: #94a3b8;
+  --neu-error: #ef4444;
+  --neu-success: #10b981;
+  --neu-warning: #f59e0b;
+
+  /* Neumorphic Shadows - Top-left light source */
+  --neu-shadow-out: 8px 8px 16px rgba(0, 0, 0, 0.1), -8px -8px 16px rgba(255, 255, 255, 0.9);
+  --neu-shadow-out-sm: 4px 4px 8px rgba(0, 0, 0, 0.08), -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --neu-shadow-out-lg: 12px 12px 24px rgba(0, 0, 0, 0.12), -12px -12px 24px rgba(255, 255, 255, 0.95);
+  --neu-shadow-in: inset 4px 4px 8px rgba(0, 0, 0, 0.08), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+  --neu-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.12), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
 }
 
 html {
@@ -48,11 +73,14 @@ html {
 }
 
 body {
-  @apply bg-primary-50 text-slate-900 font-sans antialiased;
+  background: var(--neu-bg);
+  color: var(--neu-text);
+  @apply font-sans antialiased;
 }
 
 #app {
-  @apply max-w-[480px] mx-auto min-h-screen bg-primary-50 relative flex flex-col shadow-2xl;
+  @apply max-w-[480px] mx-auto min-h-screen relative flex flex-col;
+  background: var(--neu-bg);
 }
 
 /* --- Animations --- */
@@ -64,6 +92,21 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes successPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Vue Transitions */
@@ -89,3 +132,15 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-md; }
 ::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

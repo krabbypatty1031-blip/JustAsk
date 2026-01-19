@@ -2,6 +2,7 @@
 import { ref, inject, onMounted, onUnmounted } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
+import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 const showToast = inject('showToast')
@@ -9,7 +10,7 @@ const isLoading = ref(false)
 
 const title = ref('')
 const content = ref('')
-const activeField = ref('title') // Track focused field, default to title (autofocus)
+const activeField = ref('title')
 
 const topics = ['生活瑣事', '健康養生', '尋找鄰居', '二手買賣', '閒聊']
 
@@ -23,14 +24,13 @@ const recognition = ref(null)
 const isSpeechSupported = ref(false)
 
 onMounted(() => {
-  // Check for browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
   if (SpeechRecognition) {
     isSpeechSupported.value = true
     recognition.value = new SpeechRecognition()
-    recognition.value.continuous = true // Keep listening even if user pauses
-    recognition.value.interimResults = true // Show partial results
-    recognition.value.lang = 'zh-TW' // Default to Traditional Chinese
+    recognition.value.continuous = true
+    recognition.value.interimResults = true
+    recognition.value.lang = 'zh-TW'
 
     recognition.value.onstart = () => {
       isListening.value = true
@@ -49,15 +49,13 @@ onMounted(() => {
 
     recognition.value.onresult = (event) => {
       let finalTranscript = ''
-      // Loop through results to get the final transcript
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript
         }
       }
-      
+
       if (finalTranscript) {
-        // Append text to the active field
         if (activeField.value === 'title') {
           title.value = title.value + (title.value ? ' ' : '') + finalTranscript
         } else {
@@ -98,7 +96,7 @@ const handleSubmit = async () => {
       title: title.value,
       content: content.value
     })
-    
+
     if (response.data.success) {
       showToast('發布成功！', 'success')
       router.push('/')
@@ -117,257 +115,289 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="create-view">
-    <!-- Top Nav (Cancel only) -->
-    <div class="nav-bar">
-      <button class="text-btn cancel" @click="router.back()">
-        <span class="icon">✕</span> 取消
+  <div class="neu-create">
+    <!-- Header -->
+    <header class="neu-create-header">
+      <button class="neu-back-btn" @click="router.back()" aria-label="取消">
+        <Icon name="x-mark" :size="24" />
       </button>
-      <span class="title">發布提問</span>
-      <div style="width: 4rem;"></div> <!-- Spacer -->
-    </div>
+      <h1 class="neu-create-title">發布提問</h1>
+      <div class="neu-header-spacer"></div>
+    </header>
 
-    <div class="scroll-content">
-      <div class="form-container">
-        <!-- Title Section -->
-        <div class="input-card" :class="{ 'is-active': activeField === 'title' }">
-          <label class="field-label">
-            <span class="label-icon">📌</span> 標題
-          </label>
-          <input 
-            v-model="title" 
-            type="text" 
-            class="input-title" 
-            placeholder="您想問什麼？" 
-            autofocus
-            @focus="activeField = 'title'"
-          />
-          
-          <!-- Topic Chips -->
-          <div class="topic-chips">
-            <span 
-              v-for="t in topics" 
-              :key="t" 
-              class="chip"
-              @click="selectTopic(t)"
-            >
-              # {{ t }}
-            </span>
-          </div>
-        </div>
+    <!-- Scroll Content -->
+    <div class="neu-scroll-content">
+      <!-- Title Card -->
+      <div class="neu-input-card" :class="{ 'active': activeField === 'title' }">
+        <label class="neu-field-label">
+          <Icon name="bookmark" :size="20" />
+          <span>標題</span>
+        </label>
+        <input
+          v-model="title"
+          type="text"
+          class="neu-title-input"
+          placeholder="您想問什麼？"
+          autofocus
+          @focus="activeField = 'title'"
+        />
 
-        <!-- Content Section -->
-        <div class="input-card content-card" :class="{ 'is-active': activeField === 'content' }">
-          <label class="field-label">
-            <span class="label-icon">📝</span> 詳細內容
-          </label>
-          <textarea 
-            v-model="content" 
-            class="input-content" 
-            placeholder="在這裡描述具體情況，大家會更清楚如何幫助您..."
-            @focus="activeField = 'content'"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Action Bar (Redesigned for Centered Voice) -->
-    <div class="action-bar-bottom">
-      <div class="action-container-inner">
-        <!-- Speech Button Group (Centered) -->
-        <div v-if="isSpeechSupported" class="speech-group-centered">
-          <transition name="fade-slide">
-            <div v-if="isListening" class="listening-status">
-              <div class="waves"><span></span><span></span><span></span></div>
-              <p>正在聽您說...</p>
-            </div>
-          </transition>
-
-          <button 
-            class="speech-fab-centered" 
-            :class="{ 'is-active': isListening }"
-            @click="toggleSpeech"
+        <!-- Topic Chips -->
+        <div class="neu-topic-chips">
+          <button
+            v-for="t in topics"
+            :key="t"
+            class="neu-chip"
+            @click="selectTopic(t)"
           >
-            <div class="fab-content">
-              <svg v-if="isListening" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
-              </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </div>
+            # {{ t }}
           </button>
-          <span class="fab-hint">{{ isListening ? '點擊停止' : '按住/點擊 語音輸入' }}</span>
         </div>
-
-        <!-- Submit Button (Full Width) -->
-        <button 
-          class="btn btn-primary btn-submit-full" 
-          @click="handleSubmit" 
-          :disabled="isLoading || !title.trim()"
-        >
-          <span v-if="isLoading" class="spinner"></span>
-          <span v-else>好了，發布提問</span>
-        </button>
       </div>
+
+      <!-- Content Card -->
+      <div class="neu-input-card content-card" :class="{ 'active': activeField === 'content' }">
+        <label class="neu-field-label">
+          <Icon name="document-text" :size="20" />
+          <span>詳細內容</span>
+        </label>
+        <textarea
+          v-model="content"
+          class="neu-content-input"
+          placeholder="在這裡描述具體情況，大家會更清楚如何幫助您..."
+          @focus="activeField = 'content'"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="neu-action-bar">
+      <!-- Speech Button -->
+      <div v-if="isSpeechSupported" class="neu-speech-section">
+        <transition name="fade-slide">
+          <div v-if="isListening" class="neu-listening-status">
+            <div class="neu-waves">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <p>正在聽您說...</p>
+          </div>
+        </transition>
+
+        <button
+          class="neu-speech-btn"
+          :class="{ 'active': isListening }"
+          @click="toggleSpeech"
+          :aria-label="isListening ? '停止語音輸入' : '開始語音輸入'"
+        >
+          <Icon v-if="isListening" name="stop" :size="32" />
+          <Icon v-else name="microphone" :size="32" />
+        </button>
+        <span class="neu-speech-hint">{{ isListening ? '點擊停止' : '語音輸入' }}</span>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        class="neu-submit-btn"
+        @click="handleSubmit"
+        :disabled="isLoading || !title.trim()"
+      >
+        <span v-if="isLoading" class="neu-loading">
+          <span class="neu-spinner"></span>
+          發布中...
+        </span>
+        <span v-else class="neu-submit-text">
+          <Icon name="paper-airplane" :size="22" />
+          好了，發布提問
+        </span>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.create-view {
+/* ============================================
+   NEUMORPHISM CREATE QUESTION PAGE
+   ============================================ */
+.neu-create {
   min-height: 100vh;
-  background: var(--bg-body);
+  background: var(--neu-bg);
   display: flex;
   flex-direction: column;
 }
 
-.nav-bar {
+/* --- Header --- */
+.neu-create-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 1rem 1.5rem;
-  background: white;
-  border-bottom: 1px solid var(--border-color);
+  background: var(--neu-bg);
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 
-.title { 
-  font-weight: 800; 
-  font-size: 1.25rem; 
-  color: var(--text-main);
-}
-
-.text-btn {
-  background: none;
+.neu-back-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--neu-bg);
   border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neu-text);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
-.text-btn.cancel { color: var(--text-secondary); }
 
-.scroll-content {
+.neu-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-back-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-create-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--neu-text);
+}
+
+.neu-header-spacer {
+  width: 2.5rem;
+}
+
+/* --- Scroll Content --- */
+.neu-scroll-content {
   flex: 1;
-  overflow-y: auto;
-  padding-bottom: 12rem; /* Space for bottom bar */
-}
-
-.form-container {
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.5rem;
+  padding-bottom: 14rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* --- Input Cards --- */
-.input-card {
-  background: white;
-  border-radius: var(--radius-lg);
+.neu-input-card {
+  background: var(--neu-bg);
+  border-radius: 1.25rem;
   padding: 1.25rem;
-  border: 2px solid transparent;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--neu-shadow-out);
   transition: all 0.3s ease;
 }
 
-.input-card.is-active {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-md);
+.neu-input-card.active {
+  box-shadow: var(--neu-shadow-out-lg);
   transform: translateY(-2px);
 }
 
-.field-label {
+.neu-field-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--neu-text-muted);
   margin-bottom: 0.75rem;
 }
 
-.label-icon {
+.neu-field-label svg {
+  color: var(--neu-primary);
+}
+
+.neu-title-input {
+  width: 100%;
   font-size: 1.25rem;
-}
-
-.input-title {
-  width: 100%;
-  font-size: 1.375rem;
-  font-weight: 800;
+  font-weight: 700;
+  background: transparent;
   border: none;
   outline: none;
-  padding: 0.25rem 0;
-  color: var(--text-main);
+  padding: 0.5rem 0;
+  color: var(--neu-text);
 }
 
-.input-content {
+.neu-title-input::placeholder {
+  color: var(--neu-text-light);
+  font-weight: 500;
+}
+
+.neu-content-input {
   width: 100%;
-  height: 15rem;
+  height: 12rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.7;
+  background: transparent;
   border: none;
   outline: none;
-  font-size: 1.125rem;
-  line-height: 1.6;
   resize: none;
-  color: var(--text-secondary);
+  color: var(--neu-text);
+}
+
+.neu-content-input::placeholder {
+  color: var(--neu-text-light);
 }
 
 /* --- Topic Chips --- */
-.topic-chips {
+.neu-topic-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--neu-bg-dark);
 }
 
-.chip {
-  background: var(--bg-body);
-  color: var(--text-secondary);
-  padding: 0.375rem 0.875rem;
-  border-radius: var(--radius-full);
+.neu-chip {
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
   font-size: 0.875rem;
   font-weight: 600;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid var(--border-color);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
 }
 
-.chip:hover {
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border-color: var(--primary-color);
+.neu-chip:hover {
+  color: var(--neu-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
 }
 
-/* --- Bottom Action Bar (Stacked Layout) --- */
-.action-bar-bottom {
+.neu-chip:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+/* --- Action Bar --- */
+.neu-action-bar {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  background: white;
-  padding: 1rem 1.5rem 2.5rem;
-  border-top: 1px solid var(--border-color);
-  z-index: 100;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.08);
-}
-
-.action-container-inner {
+  background: var(--neu-bg);
+  padding: 1.25rem 1.5rem calc(2rem + var(--sab));
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.speech-group-centered {
+/* --- Speech Section --- */
+.neu-speech-section {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -375,77 +405,175 @@ const handleSubmit = async () => {
   position: relative;
 }
 
-.speech-fab-centered {
-  width: 5.5rem;
-  height: 5.5rem;
+.neu-speech-btn {
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
-  background: var(--bg-body);
-  border: 3px solid var(--primary-color);
-  color: var(--primary-color);
+  background: var(--neu-bg);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  color: var(--neu-primary);
+  box-shadow: var(--neu-shadow-out);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.speech-fab-centered.is-active {
-  background: var(--primary-gradient);
+.neu-speech-btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--neu-shadow-out-lg);
+}
+
+.neu-speech-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-speech-btn.active {
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   color: white;
-  border-color: transparent;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
+              -3px -3px 8px rgba(255, 255, 255, 0.8),
+              0 4px 16px rgba(20, 184, 166, 0.4);
   transform: scale(1.1);
-  box-shadow: 0 10px 25px rgba(20, 184, 166, 0.4);
 }
 
-.btn-submit-full {
-  width: 100%;
-  height: 4rem;
-  border-radius: var(--radius-lg);
-  font-size: 1.375rem;
-  font-weight: 800;
-  box-shadow: var(--shadow-md);
+.neu-speech-hint {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
 }
 
-.fab-hint {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.listening-status {
+.neu-listening-status {
   position: absolute;
-  bottom: 120%;
-  background: rgba(0,0,0,0.85);
-  color: white;
+  bottom: calc(100% + 1rem);
+  background: var(--neu-bg);
   padding: 0.75rem 1.25rem;
   border-radius: 2rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   white-space: nowrap;
-  backdrop-filter: blur(4px);
-  z-index: 101;
+  box-shadow: var(--neu-shadow-out);
+  color: var(--neu-text);
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
-.waves {
+.neu-waves {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
-.waves span {
+
+.neu-waves span {
   width: 4px;
   height: 16px;
-  background: var(--primary-color);
+  background: var(--neu-primary);
   border-radius: 2px;
   animation: wave 0.8s infinite alternate;
 }
-@keyframes wave { from { height: 6px; } to { height: 20px; } }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.neu-waves span:nth-child(2) { animation-delay: 0.2s; }
+.neu-waves span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  from { height: 6px; }
+  to { height: 20px; }
 }
 
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
-.fade-slide-enter-from, .fade-slide-leave-to { opacity: 0; transform: translateY(10px); }
+/* --- Submit Button --- */
+.neu-submit-btn {
+  width: 100%;
+  padding: 1.125rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1),
+              -4px -4px 10px rgba(255, 255, 255, 0.7),
+              0 4px 16px rgba(20, 184, 166, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-submit-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.12),
+              -6px -6px 12px rgba(255, 255, 255, 0.8),
+              0 8px 24px rgba(20, 184, 166, 0.45);
+}
+
+.neu-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+              inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.neu-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.neu-submit-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.neu-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.neu-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Transitions --- */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* --- Responsive --- */
+@media (max-width: 400px) {
+  .neu-scroll-content {
+    padding: 1rem;
+    padding-bottom: 14rem;
+  }
+
+  .neu-action-bar {
+    padding: 1rem 1rem calc(1.5rem + var(--sab));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 </style>
