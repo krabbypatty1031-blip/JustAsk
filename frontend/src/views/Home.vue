@@ -82,64 +82,66 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="home-view">
+  <div class="min-h-full">
       <!-- 頂部 Header -->
-    <header class="home-header">
-      <div class="header-content">
-        <h1 class="app-title">吾識JustAsk</h1>
-        <div class="header-actions">
+    <header class="bg-white px-6 pt-6 pb-4 rounded-b-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.05)] mb-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-extrabold bg-gradient-to-br from-primary-500 to-cyan-500 bg-clip-text text-transparent tracking-tighter">吾識JustAsk</h1>
+        <div class="flex items-center gap-4">
            <!-- Font Size Toggle -->
            <button 
-             class="btn-font-toggle" 
+             class="w-12 h-12 rounded-full bg-white border border-primary-100 flex items-center justify-center shadow-sm transition-all hover:border-primary-500 hover:scale-105 active:scale-95 active:bg-slate-50" 
              @click="toggleFontSize" 
              aria-label="調整字體大小"
              :aria-pressed="false"
            >
-              <span class="font-icon" :class="'level-' + fontSizeLevel">Aa</span>
+              <span class="font-serif text-slate-900 leading-none transition-all" 
+                    :class="{ 'text-base font-semibold': fontSizeLevel === 0, 'text-lg font-bold': fontSizeLevel === 1, 'text-xl font-black text-primary-600': fontSizeLevel === 2 }">Aa</span>
             </button>
 
             <!-- 如果已登入，顯示小頭像（模擬） -->
-            <div class="avatar-container" v-if="currentUser">
+            <div class="relative" v-if="currentUser">
               <img 
                 :src="getAvatarUrl(currentUser.username)" 
-                class="user-avatar-small" 
+                class="w-12 h-12 rounded-full object-cover bg-white cursor-pointer border-[3px] border-white shadow-md hover:scale-105 transition-transform" 
                 @click="toggleUserMenu"
                 alt="Me"
               />
               <!-- Dropdown Menu -->
               <transition name="fade">
-                <div v-if="showUserMenu" class="user-dropdown">
-                  <div class="menu-item" @click="goToProfile">
+                <div v-if="showUserMenu" class="absolute top-[60px] right-0 bg-white min-w-[180px] rounded-2xl shadow-xl py-3 z-50 border border-slate-100">
+                  <div class="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t border-slate-100"></div>
+                  <div class="px-5 py-3 flex items-center gap-3 text-slate-900 text-lg font-medium cursor-pointer hover:bg-slate-50 transition-colors" @click="goToProfile">
                     <span>👤</span> 我的檔案
                   </div>
-                  <div class="menu-divider"></div>
-                  <div class="menu-item logout" @click="handleLogout">
+                  <div class="h-px bg-slate-100 my-2"></div>
+                  <div class="px-5 py-3 flex items-center gap-3 text-red-500 text-lg font-semibold cursor-pointer hover:bg-red-50 transition-colors" @click="handleLogout">
                     <span>🚪</span> 退出登入
                   </div>
                 </div>
               </transition>
             </div>
-            <button v-else class="btn-login-sm" @click="router.push('/login')">
+            <button v-else class="px-6 py-3 bg-slate-50 border-2 border-slate-200 rounded-full font-bold text-lg text-slate-900 transition-all hover:bg-white hover:border-primary-500 hover:text-primary-600" @click="router.push('/login')">
               登入
             </button>
         </div>
       </div>
       
       <!-- 搜索/歡迎卡片 -->
-      <div class="welcome-card">
-        <div class="welcome-text">
-          <h2>{{ currentUser ? `早安，${currentUser.username}！` : '歡迎來到 吾識JustAsk' }}</h2>
-          <p>今天想知道些什麼？</p>
+      <div class="relative bg-gradient-to-br from-primary-500 to-cyan-500 rounded-[2rem] p-8 text-white shadow-[0_12px_30px_rgba(255,82,82,0.25)] overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-2xl font-extrabold mb-2">{{ currentUser ? `早安，${currentUser.username}！` : '歡迎來到 吾識JustAsk' }}</h2>
+          <p class="text-lg font-medium opacity-95">今天想知道些什麼？</p>
         </div>
-        <div class="decoration">🌟</div>
+        <div class="absolute -right-2 -bottom-5 text-8xl opacity-25 rotate-12 select-none">🌟</div>
       </div>
     </header>
 
     <!-- 內容區域 -->
-    <section class="feed-section">
-      <div class="section-header">
-        <h3>最新動態</h3>
-        <span class="refresh-icon">🔄</span>
+    <section class="pb-6">
+      <div class="px-6 mb-4 flex justify-between items-center">
+        <h3 class="text-2xl font-extrabold text-slate-900">最新動態</h3>
+        <span class="text-2xl text-slate-400 cursor-pointer p-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors">🔄</span>
       </div>
       <QuestionFeed />
     </section>
@@ -147,244 +149,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.home-view {
-  min-height: 100%;
-}
-
-.home-header {
-  background: #fff;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-  margin-bottom: 1.5rem;
-  /* Ensure header content respects top notches if not covered by App padding */
-}
-
-@media (max-width: 380px) {
-  .home-header {
-    padding: 1rem;
-  }
-  
-  .app-title {
-    font-size: 1.5rem;
-  }
-
-  .welcome-card {
-    padding: 1.5rem;
-  }
-  
-  .welcome-text h2 {
-    font-size: 1.5rem;
-  }
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-}
-
-.app-title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
-}
-
-.user-avatar-small {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #fff;
-  cursor: pointer;
-  border: 3px solid #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.btn-font-toggle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: white;
-  border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-right: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s;
-}
-
-.btn-font-toggle:hover,
-.btn-font-toggle:focus {
-  border-color: var(--primary-color);
-  transform: scale(1.05);
-}
-
-.btn-font-toggle:active {
-  transform: scale(0.95);
-  background: #f5f5f5;
-}
-
-.font-icon {
-  font-family: serif;
-  color: var(--text-main);
-  line-height: 1;
-  transition: all 0.2s;
-}
-
-/* Visual indicators for levels */
-.font-icon.level-0 { font-size: 1rem; font-weight: 600; }
-.font-icon.level-1 { font-size: 1.125rem; font-weight: 700; }
-.font-icon.level-2 { font-size: 1.25rem; font-weight: 900; color: var(--primary-color); }
-
-.btn-login-sm {
-  padding: 0.75rem 1.5rem;
-  background: var(--bg-input);
-  border: 2px solid var(--border-color);
-  border-radius: 1.5rem;
-  font-weight: bold;
-  font-size: 1.125rem;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-login-sm:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  background: white;
-}
-
-.welcome-card {
-  background: var(--primary-gradient);
-  border-radius: 2rem;
-  padding: 2rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 12px 30px rgba(255, 82, 82, 0.35);
-}
-
-.welcome-text h2 {
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-  font-weight: 800;
-}
-
-.welcome-text p {
-  opacity: 0.95;
-  font-size: 1.125rem;
-  font-weight: 500;
-}
-
-.decoration {
-  position: absolute;
-  right: -10px;
-  bottom: -20px;
-  font-size: 6rem;
-  opacity: 0.25;
-  transform: rotate(15deg);
-}
-
-.section-header {
-  padding: 0 1.5rem;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-header h3 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-main);
-}
-
-.refresh-icon {
-  font-size: 1.5rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-}
-
-.refresh-icon:hover {
-  background: var(--bg-input);
-  color: var(--text-main);
-}
-
-/* Dropdown Menu Styles */
-.avatar-container {
-  position: relative;
-}
-
-.user-dropdown {
-  position: absolute;
-  top: 60px;
-  right: 0;
-  background: white;
-  min-width: 180px;
-  border-radius: 1.5rem;
-  box-shadow: var(--shadow-lg);
-  padding: 0.75rem 0;
-  z-index: 1000;
-  border: 2px solid var(--border-color);
-}
-
-/* Little arrow pointer */
-.user-dropdown::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  right: 16px;
-  width: 16px;
-  height: 16px;
-  background: white;
-  transform: rotate(45deg);
-  border-left: 2px solid var(--border-color);
-  border-top: 2px solid var(--border-color);
-}
-
-.menu-item {
-  padding: 0.875rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-main);
-  font-size: 1.125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.menu-item:hover {
-  background: var(--bg-hover);
-}
-
-.menu-item.logout {
-  color: var(--error-color);
-  font-weight: 600;
-}
-
-.menu-divider {
-  height: 2px;
-  background: var(--border-color);
-  margin: 0.5rem 0;
-}
-
 /* Dropdown Transition */
 .fade-enter-active,
 .fade-leave-active {

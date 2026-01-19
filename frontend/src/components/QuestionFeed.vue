@@ -35,60 +35,60 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="feed-container">
+  <div class="px-5">
     
     <!-- Loading Skeleton -->
-    <div v-if="isLoading" class="skeleton-list">
-      <div v-for="n in 3" :key="n" class="skeleton-item card">
-        <div class="s-header">
-          <div class="s-avatar"></div>
-          <div class="s-line short"></div>
+    <div v-if="isLoading" class="space-y-6">
+      <div v-for="n in 3" :key="n" class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm animate-pulse h-64">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 bg-slate-100 rounded-full"></div>
+          <div class="h-4 bg-slate-100 rounded w-1/3"></div>
         </div>
-        <div class="s-line full"></div>
-        <div class="s-line full"></div>
+        <div class="h-4 bg-slate-100 rounded w-full mb-3"></div>
+        <div class="h-4 bg-slate-100 rounded w-2/3"></div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="questions.length === 0" class="empty-state">
-      <div class="empty-icon">🍃</div>
-      <p>這裡好安靜，快來發布第一條動態吧！</p>
+    <div v-else-if="questions.length === 0" class="text-center py-16 text-slate-400">
+      <div class="text-6xl mb-4">🍃</div>
+      <p class="text-xl font-medium">這裡好安靜，快來發布第一條動態吧！</p>
     </div>
 
     <!-- Feed List -->
-    <transition-group name="list" tag="div" class="question-list" v-else>
+    <transition-group name="list" tag="div" class="space-y-6" v-else>
       <article 
         v-for="(question, index) in questions" 
         :key="question._id" 
-        class="card question-card"
+        class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-primary-200 active:scale-[0.99] cursor-pointer group"
         @click="handleNavigate(question._id)"
-        :style="{ '--delay': index * 0.1 + 's' }"
+        :style="{ transitionDelay: index * 50 + 'ms' }"
       >
         <!-- User Info Header -->
-        <div class="card-header">
-          <div class="user-info">
-            <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="avatar" alt="avatar" />
-            <div class="meta-text">
-              <span class="username">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
-              <span class="time">{{ new Date(question.createdAt).toLocaleDateString() }}</span>
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center gap-3">
+            <img :src="getAvatarUrl(question.authorName || question.author?.username || '匿名')" class="w-12 h-12 rounded-full object-cover border border-slate-100 bg-slate-50" alt="avatar" />
+            <div class="flex flex-col">
+              <span class="font-bold text-slate-900 text-lg leading-tight">{{ question.authorName || question.author?.username || '匿名用戶' }}</span>
+              <span class="text-sm text-slate-400 font-medium">{{ new Date(question.createdAt).toLocaleDateString() }}</span>
             </div>
           </div>
-          <span class="category-tag">提問</span>
+          <span class="text-xs font-bold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full border border-primary-100 tracking-wide">提問</span>
         </div>
 
         <!-- Content -->
-        <h3 class="q-title">{{ question.title }}</h3>
-        <p class="q-preview">{{ question.content }}</p>
+        <h3 class="text-xl font-extrabold text-slate-800 mb-3 leading-snug group-hover:text-primary-600 transition-colors">{{ question.title }}</h3>
+        <p class="text-slate-500 text-lg leading-relaxed mb-6 line-clamp-2">{{ question.content }}</p>
 
         <!-- Footer Actions -->
-        <div class="card-footer">
-          <div class="action-item">
-            <span class="icon">💬</span>
-            <span class="count">{{ question.answers ? question.answers.length : 0 }} 回答</span>
+        <div class="border-t border-slate-100 pt-4 flex gap-6">
+          <div class="flex items-center gap-2 text-slate-400 font-semibold group-hover:text-primary-500 transition-colors">
+            <span class="text-xl">💬</span>
+            <span>{{ question.answers ? question.answers.length : 0 }} 回答</span>
           </div>
-          <div class="action-item">
-            <span class="icon">🔥</span>
-            <span class="count">熱度</span>
+          <div class="flex items-center gap-2 text-slate-400 font-semibold group-hover:text-secondary-500 transition-colors">
+            <span class="text-xl">🔥</span>
+            <span>熱度</span>
           </div>
         </div>
       </article>
@@ -98,160 +98,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.feed-container {
-  padding: 0 1.25rem;
-}
-
-/* --- Card Styles --- */
-.question-card {
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  animation: slideUp 0.3s ease backwards;
-  animation-delay: var(--delay);
-  border: 2px solid var(--border-color);
-}
-
-.question-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-color);
-}
-
-.question-card:active {
-  transform: scale(0.99);
-  background: var(--bg-hover);
-}
-
-.question-card:focus {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #f0f0f0;
-  border: 2px solid var(--border-color);
-}
-
-.meta-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
-  font-weight: 700;
-  font-size: 1.125rem;
-  color: var(--text-main);
-}
-
-.time {
-  font-size: 0.9375rem;
-  color: var(--text-muted);
-}
-
-.category-tag {
-  font-size: 0.9375rem;
-  background: #FFF5F5;
-  color: var(--primary-color);
-  padding: 0.5rem 0.875rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  border: 1px solid rgba(255, 82, 82, 0.2);
-}
-
-.q-title {
-  font-size: 1.375rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
-  color: var(--text-main);
-}
-
-.q-preview {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.card-footer {
-  border-top: 2px solid var(--border-color);
-  padding-top: 1rem;
-  display: flex;
-  gap: 1.5rem;
-}
-
-.action-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: background 0.2s;
-}
-
-.action-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-main);
-}
-
-/* --- Skeleton Animation --- */
-.skeleton-item {
-  height: 200px;
-  background: #fff;
-  border: 2px solid var(--border-color);
-}
-.s-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-.s-avatar { width: 48px; height: 48px; background: #f0f0f0; border-radius: 50%; }
-.s-line { height: 16px; background: #f0f0f0; border-radius: 8px; margin-bottom: 1rem; }
-.s-line.short { width: 120px; }
-.s-line.full { width: 100%; }
-
-.skeleton-item * {
-  animation: pulse 1.5s infinite ease-in-out;
-}
-
-/* --- Empty State --- */
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-secondary);
-}
-.empty-icon { font-size: 4rem; margin-bottom: 1rem; }
-.empty-state p {
-  font-size: 1.25rem;
-  font-weight: 500;
-}
-
 /* --- List Transitions --- */
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .list-enter-from,
 .list-leave-to {

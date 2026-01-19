@@ -84,8 +84,8 @@ const handleNavClick = (item) => {
 </script>
 
 <template>
-  <div class="app-container">
-    <main class="content-area">
+  <div class="flex flex-col h-screen bg-primary-50 pt-[var(--sat)] pb-[var(--sab)]">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(7rem+var(--sab))] scrollbar-hide">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
           <component :is="Component" />
@@ -93,19 +93,21 @@ const handleNavClick = (item) => {
       </router-view>
     </main>
 
-    <nav v-if="!['/login', '/register', '/forgot-password', '/ask'].includes(route.path) && !route.path.startsWith('/question/')" class="bottom-nav">
+    <nav v-if="!['/login', '/register', '/forgot-password', '/ask'].includes(route.path) && !route.path.startsWith('/question/')" 
+         class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] h-[calc(6.5rem+var(--sab))] pb-[var(--sab)] bg-white/90 backdrop-blur-md border-t border-primary-100 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 rounded-t-3xl">
       <div 
         v-for="item in navItems" 
         :key="item.path"
-        class="nav-item"
-        :class="{ 'active': isRouteActive(item), 'nav-special': item.special }"
+        class="flex flex-col items-center justify-center text-slate-400 transition-all duration-200 flex-1 h-full cursor-pointer pb-1 min-w-[4rem] hover:text-slate-600"
+        :class="{ 'text-primary-500 font-bold': isRouteActive(item), 'relative -top-6': item.special }"
         @click="handleNavClick(item)"
       >
-        <div class="icon-wrapper">
+        <div class="mb-1 flex items-center justify-center transition-transform duration-200"
+             :class="{ 'w-[4.5rem] h-[4.5rem] rounded-full text-white shadow-lg border-4 border-white bg-gradient-to-br from-primary-500 to-cyan-500 hover:scale-105 active:scale-95': item.special }">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            width="28" 
-            height="28" 
+            :width="item.special ? 32 : 28" 
+            :height="item.special ? 32 : 28" 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke="currentColor" 
@@ -116,156 +118,33 @@ const handleNavClick = (item) => {
           >
           </svg>
         </div>
-        <span class="nav-label">{{ item.label }}</span>
+        <span class="text-xs font-bold tracking-wide" :class="{ 'mt-2 text-slate-800 text-sm': item.special }">{{ item.label }}</span>
       </div>
     </nav>
 
     <transition name="toast">
-      <div v-if="toast.show" class="toast" :class="toast.type">
+      <div v-if="toast.show" 
+           class="fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-lg font-semibold z-[2000] shadow-xl flex items-center max-w-[90%] text-center border-2 border-white/30 backdrop-blur-sm"
+           :class="toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-slate-800 text-white'">
         {{ toast.message }}
       </div>
     </transition>
   </div>
 </template>
 
-<style scoped>
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: var(--bg-body);
-  padding-top: var(--sat);
-  padding-bottom: var(--sab);
-}
-
-.content-area {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: calc(7rem + var(--sab));
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.content-area::-webkit-scrollbar { display: none; }
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 30rem;
-  height: calc(6.5rem + var(--sab));
-  padding-bottom: var(--sab);
-  background: #ffffff;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-  z-index: 999;
-  border-top-left-radius: 1.5rem;
-  border-top-right-radius: 1.5rem;
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-light);
-  transition: all 0.2s ease;
-  flex: 1;
-  height: 100%;
-  cursor: pointer;
-  padding-bottom: 0.25rem;
-  min-width: 4rem;
-}
-
-.nav-item:hover {
-  color: var(--text-secondary);
-}
-
-.nav-item.active {
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.nav-item:focus {
-  outline: none;
-  background: var(--bg-hover);
-}
-
-.icon-wrapper {
-  margin-bottom: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nav-label {
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-/* Special styling for the middle "Ask" button */
-.nav-special {
-  position: relative;
-  top: -24px;
-}
-
-.nav-special .icon-wrapper {
-  background: var(--primary-gradient);
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  color: white;
-  box-shadow: 0 8px 20px rgba(255, 82, 82, 0.4);
-  border: 4px solid white;
-}
-
-.nav-special .nav-label {
-  margin-top: 0.5rem;
-  color: var(--text-main);
-  font-weight: 900;
-  font-size: 1.125rem;
-}
-
-.nav-special:hover .icon-wrapper {
-  transform: scale(1.05);
-}
-
-.nav-special:active .icon-wrapper {
-  transform: scale(0.95);
-}
-
-.toast {
-  position: fixed;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--text-main);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 2rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  z-index: 2000;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  display: flex;
-  align-items: center;
-  max-width: 90%;
-  text-align: center;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-
+<style>
 .toast-enter-active, .toast-leave-active {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .toast-enter-from, .toast-leave-to {
   opacity: 0;
   transform: translate(-50%, -1.25rem) scale(0.9);
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 </style>
