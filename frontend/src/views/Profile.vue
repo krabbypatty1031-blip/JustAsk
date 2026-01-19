@@ -109,7 +109,7 @@ const getGreeting = () => {
         @click="activeTab = 'questions'"
       >
         <div class="neu-stat-icon">
-          <Icon name="question-mark-circle" :size="24" />
+          <Icon name="document-text" :size="22" />
         </div>
         <div class="neu-stat-info">
           <span class="neu-stat-num">{{ myQuestions.length }}</span>
@@ -122,12 +122,28 @@ const getGreeting = () => {
         @click="activeTab = 'answers'"
       >
         <div class="neu-stat-icon">
-          <Icon name="light-bulb" :size="24" />
+          <Icon name="light-bulb" :size="22" />
         </div>
         <div class="neu-stat-info">
           <span class="neu-stat-num">{{ myAnsweredQuestions.length }}</span>
           <span class="neu-stat-label">我的回答</span>
         </div>
+      </button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="neu-quick-actions">
+      <button class="neu-quick-btn" @click="router.push('/ask')">
+        <div class="neu-quick-icon primary">
+          <Icon name="plus" :size="20" />
+        </div>
+        <span>發布提問</span>
+      </button>
+      <button class="neu-quick-btn" @click="router.push('/')">
+        <div class="neu-quick-icon">
+          <Icon name="home" :size="20" />
+        </div>
+        <span>瀏覽首頁</span>
       </button>
     </div>
 
@@ -322,16 +338,21 @@ const getGreeting = () => {
 }
 
 .neu-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   padding: 0.375rem 0.75rem;
   border-radius: 2rem;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: white;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.neu-badge svg {
+  flex-shrink: 0;
 }
 
 /* --- Stats Grid --- */
@@ -343,6 +364,63 @@ const getGreeting = () => {
   margin-top: -1.5rem;
   position: relative;
   z-index: 10;
+}
+
+/* --- Quick Actions --- */
+.neu-quick-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.neu-quick-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neu-text);
+}
+
+.neu-quick-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-quick-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-quick-icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  background: var(--neu-bg-dark);
+  color: var(--neu-text-muted);
+  transition: all 0.3s ease;
+}
+
+.neu-quick-icon.primary {
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
+}
+
+.neu-quick-btn:hover .neu-quick-icon:not(.primary) {
+  color: var(--neu-primary);
 }
 
 .neu-stat-card {
@@ -382,6 +460,7 @@ const getGreeting = () => {
 .neu-stat-icon {
   width: 3rem;
   height: 3rem;
+  min-width: 3rem;
   border-radius: 1rem;
   background: var(--neu-bg);
   box-shadow: var(--neu-shadow-out-sm);
@@ -390,6 +469,10 @@ const getGreeting = () => {
   justify-content: center;
   color: var(--neu-text-muted);
   transition: all 0.3s ease;
+}
+
+.neu-stat-icon svg {
+  flex-shrink: 0;
 }
 
 .neu-stat-info {
@@ -455,6 +538,7 @@ const getGreeting = () => {
 .neu-record-icon {
   width: 2.75rem;
   height: 2.75rem;
+  min-width: 2.75rem;
   border-radius: 0.875rem;
   background: var(--neu-bg);
   box-shadow: var(--neu-shadow-out-sm);
@@ -465,8 +549,13 @@ const getGreeting = () => {
   flex-shrink: 0;
 }
 
+.neu-record-icon svg {
+  flex-shrink: 0;
+}
+
 .neu-record-icon.answer-icon {
   color: var(--neu-warning);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.02));
 }
 
 .neu-record-content {
@@ -511,8 +600,18 @@ const getGreeting = () => {
 }
 
 .neu-record-arrow {
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--neu-text-light);
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.neu-record-arrow svg {
+  flex-shrink: 0;
 }
 
 .neu-record-card:hover .neu-record-arrow {
@@ -523,16 +622,24 @@ const getGreeting = () => {
 /* --- Empty & Loading States --- */
 .neu-empty-state {
   text-align: center;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 1.5rem;
   background: var(--neu-bg);
   border-radius: 1.25rem;
   box-shadow: var(--neu-shadow-in);
 }
 
 .neu-empty-icon {
-  color: var(--neu-text-light);
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.25rem;
+  background: var(--neu-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--neu-shadow-out-sm);
+  color: var(--neu-primary);
+  opacity: 0.7;
 }
 
 .neu-empty-state p {
@@ -540,27 +647,32 @@ const getGreeting = () => {
   font-weight: 600;
   color: var(--neu-text-muted);
   margin-bottom: 1.25rem;
+  line-height: 1.5;
 }
 
 .neu-loading-state {
   text-align: center;
-  padding: 3rem;
-  color: var(--neu-text-muted);
+  padding: 3rem 1.5rem;
+  background: var(--neu-bg);
+  border-radius: 1.25rem;
+  box-shadow: var(--neu-shadow-in);
 }
 
 .neu-loading-state p {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   font-weight: 600;
+  color: var(--neu-text-muted);
 }
 
 .neu-spinner {
   display: inline-block;
-  width: 2rem;
-  height: 2rem;
-  border: 3px solid var(--neu-bg-dark);
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid var(--neu-bg-dark);
   border-top-color: var(--neu-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  box-shadow: var(--neu-shadow-out-sm);
 }
 
 /* --- Buttons --- */
