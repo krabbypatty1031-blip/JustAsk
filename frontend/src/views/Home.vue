@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import axios from '../api/axios'
 import QuestionFeed from '../components/QuestionFeed.vue'
 import Icon from '../components/Icon.vue'
@@ -15,6 +15,13 @@ const isLoading = ref(true)
 const showUserMenu = ref(false)
 const fontSizeLevel = ref(0)
 
+// Search state
+const searchQuery = ref('')
+const searchResults = ref([])
+const isSearching = ref(false)
+const showSearchResults = ref(false)
+let searchTimeout = null
+
 const fetchQuestions = async () => {
   isLoading.value = true
   try {
@@ -28,6 +35,60 @@ const fetchQuestions = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+// Search functionality
+const handleSearch = async () => {
+  const query = searchQuery.value.trim()
+  
+  if (!query) {
+    searchResults.value = []
+    showSearchResults.value = false
+    return
+  }
+  
+  isSearching.value = true
+  showSearchResults.value = true
+  
+  try {
+    const response = await axios.get('/questions/search', {
+      params: { q: query }
+    })
+    if (response.data.success) {
+      searchResults.value = response.data.questions
+    }
+  } catch (error) {
+    showToast('搜索失敗，請重試', 'error')
+    searchResults.value = []
+  } finally {
+    isSearching.value = false
+  }
+}
+
+// Debounced search
+watch(searchQuery, (newValue) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  
+  if (!newValue.trim()) {
+    searchResults.value = []
+    showSearchResults.value = false
+    return
+  }
+  
+  searchTimeout = setTimeout(() => {
+    handleSearch()
+  }, 300)
+})
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  searchResults.value = []
+  showSearchResults.value = false
+}
+
+const goToQuestion = (id) => {
+  router.push(`/question/${id}`)
+  clearSearch()
 }
 
 const handleNavigate = (id) => {
@@ -132,6 +193,58 @@ onMounted(() => {
         <div class="neu-welcome-icon" aria-hidden="true">
           <Icon name="sparkles" :size="80" :stroke-width="1.5" />
         </div>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="neu-search-container">
+        <div class="neu-search-wrapper">
+          <Icon name="magnifying-glass" :size="20" class="neu-search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="neu-search-input"
+            placeholder="搜索問題..."
+            @keyup.enter="handleSearch"
+            @focus="showSearchResults = searchQuery.trim().length > 0"
+          />
+          <button
+            v-if="searchQuery"
+            class="neu-search-clear"
+            @click="clearSearch"
+            aria-label="清除搜索"
+          >
+            <Icon name="x-mark" :size="18" />
+          </button>
+        </div>
+        
+        <!-- Search Results Dropdown -->
+        <transition name="search-dropdown">
+          <div v-if="showSearchResults" class="neu-search-results">
+            <div v-if="isSearching" class="neu-search-loading">
+              <span class="neu-search-spinner"></span>
+              搜索中...
+            </div>
+            <template v-else-if="searchResults.length > 0">
+              <div
+                v-for="result in searchResults"
+                :key="result._id"
+                class="neu-search-result-item"
+                @click="goToQuestion(result._id)"
+              >
+                <div class="neu-search-result-title">{{ result.title }}</div>
+                <div class="neu-search-result-meta">
+                  <span>{{ result.authorName }}</span>
+                  <span>·</span>
+                  <span>{{ result.answers?.length || 0 }} 回答</span>
+                </div>
+              </div>
+            </template>
+            <div v-else-if="searchQuery.trim()" class="neu-search-empty">
+              <Icon name="magnifying-glass" :size="32" />
+              <span>沒有找到相關問題</span>
+            </div>
+          </div>
+        </transition>
       </div>
     </header>
 
@@ -422,5 +535,177 @@ onMounted(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+/* ============================================
+   SEARCH BAR
+   ============================================ */
+.neu-search-container {
+  position: relative;
+  margin-top: 1.5rem;
+}
+
+.neu-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  box-shadow: var(--neu-shadow-in);
+  transition: all 0.3s ease;
+}
+
+.neu-search-wrapper:focus-within {
+  box-shadow: var(--neu-shadow-in-deep),
+              0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.neu-search-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--neu-text-muted);
+  pointer-events: none;
+}
+
+.neu-search-input {
+  width: 100%;
+  padding: 1rem 3rem 1rem 3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--neu-text);
+  outline: none;
+}
+
+.neu-search-input::placeholder {
+  color: var(--neu-text-light);
+  font-weight: 400;
+}
+
+.neu-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+}
+
+.neu-search-clear:hover {
+  color: var(--neu-error);
+  transform: scale(1.05);
+}
+
+.neu-search-clear:active {
+  box-shadow: var(--neu-shadow-in);
+  transform: scale(0.98);
+}
+
+/* Search Results Dropdown */
+.neu-search-results {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 0;
+  right: 0;
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  box-shadow: var(--neu-shadow-out);
+  max-height: 20rem;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.neu-search-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--neu-text-muted);
+  font-weight: 500;
+}
+
+.neu-search-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--neu-bg-dark);
+  border-top-color: var(--neu-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.neu-search-result-item {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--neu-bg-dark);
+}
+
+.neu-search-result-item:last-child {
+  border-bottom: none;
+}
+
+.neu-search-result-item:hover {
+  background: var(--neu-bg-dark);
+}
+
+.neu-search-result-item:active {
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-search-result-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--neu-text);
+  margin-bottom: 0.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.neu-search-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--neu-text-muted);
+}
+
+.neu-search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--neu-text-muted);
+  font-weight: 500;
+}
+
+/* Search Dropdown Transition */
+.search-dropdown-enter-active,
+.search-dropdown-leave-active {
+  transition: all 0.25s ease;
+}
+
+.search-dropdown-enter-from,
+.search-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

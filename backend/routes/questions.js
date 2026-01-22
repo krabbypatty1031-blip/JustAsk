@@ -53,6 +53,59 @@ function getCurrentUserId(req) {
   return null;
 }
 
+// GET /questions/search - Search questions by keyword
+router.get('/search', async function(req, res) {
+  const { q } = req.query;
+  
+  if (!q || !q.trim()) {
+    return res.json({ success: true, questions: [], data: [] });
+  }
+  
+  let db;
+  try {
+    db = await connectToDB();
+    const searchRegex = new RegExp(q.trim(), 'i');
+    
+    const questions = await db.collection('Questions')
+      .find({
+        $or: [
+          { title: searchRegex },
+          { content: searchRegex }
+        ]
+      })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+    
+    // Transform questions for API response
+    const transformedQuestions = questions.map(q => ({
+      _id: q._id.toString(),
+      title: q.title,
+      content: q.content,
+      tags: q.tags || [],
+      authorId: q.author?.id,
+      authorName: q.author?.username || '匿名用戶',
+      createdAt: q.createdAt,
+      views: q.views || 0,
+      answers: (q.answers || []).map(a => ({
+        _id: a._id.toString(),
+        content: a.content,
+        authorId: a.author?.id,
+        authorName: a.author?.username || '匿名用戶',
+        createdAt: a.createdAt,
+        thanks: a.thanks || 0
+      }))
+    }));
+    
+    res.json({ success: true, questions: transformedQuestions, data: transformedQuestions });
+  } catch (err) {
+    console.error('Error in GET /questions/search:', err);
+    res.status(500).json({ success: false, message: '搜索失敗: ' + err.message });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
 // GET /questions - Get all questions (newest first)
 router.get('/', async function(req, res) {
   let db;

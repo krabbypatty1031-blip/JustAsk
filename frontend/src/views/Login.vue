@@ -145,8 +145,19 @@ const handleLogin = async () => {
   <div class="neu-container">
     <!-- Header Section -->
     <div class="neu-header">
-      <div class="neu-logo">
-        <Icon name="question-mark-circle" :size="32" />
+      <!-- Hero Illustration -->
+      <div class="neu-hero-illustration">
+        <div class="neu-hero-circle neu-hero-circle-outer">
+          <div class="neu-hero-circle neu-hero-circle-middle">
+            <div class="neu-hero-circle neu-hero-circle-inner">
+              <Icon name="question-mark-circle" :size="48" :stroke-width="1.5" />
+            </div>
+          </div>
+        </div>
+        <!-- Decorative elements -->
+        <div class="neu-hero-dot neu-hero-dot-1"></div>
+        <div class="neu-hero-dot neu-hero-dot-2"></div>
+        <div class="neu-hero-dot neu-hero-dot-3"></div>
       </div>
       <h1 class="neu-title">歡迎回來</h1>
       <p class="neu-subtitle">登入 吾識JustAsk 繼續您的學習之旅</p>
@@ -334,22 +345,89 @@ const handleLogin = async () => {
   animation: fadeInDown 0.6s ease-out;
 }
 
-.neu-logo {
-  width: 5rem;
-  height: 5rem;
-  background: var(--neu-bg);
-  border-radius: 1.5rem;
+/* --- Hero Illustration --- */
+.neu-hero-illustration {
+  position: relative;
+  width: 10rem;
+  height: 10rem;
+  margin: 0 auto 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  color: var(--neu-primary);
-  box-shadow: var(--neu-shadow-out);
-  transition: all 0.3s ease;
 }
 
-.neu-logo:hover {
-  transform: translateY(-2px);
+.neu-hero-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--neu-bg);
+}
+
+.neu-hero-circle-outer {
+  width: 10rem;
+  height: 10rem;
+  box-shadow: var(--neu-shadow-out);
+  animation: heroFloat 4s ease-in-out infinite;
+}
+
+.neu-hero-circle-middle {
+  width: 7.5rem;
+  height: 7.5rem;
+  box-shadow: var(--neu-shadow-in);
+}
+
+.neu-hero-circle-inner {
+  width: 5rem;
+  height: 5rem;
+  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  color: white;
+  box-shadow: 4px 4px 10px rgba(20, 184, 166, 0.3),
+              -2px -2px 6px rgba(255, 255, 255, 0.8);
+}
+
+.neu-hero-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-out-sm);
+}
+
+.neu-hero-dot-1 {
+  width: 1rem;
+  height: 1rem;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--neu-primary-light);
+  animation: heroDot 3s ease-in-out infinite;
+}
+
+.neu-hero-dot-2 {
+  width: 0.75rem;
+  height: 0.75rem;
+  bottom: 1rem;
+  left: 0;
+  background: var(--neu-primary);
+  animation: heroDot 3s ease-in-out infinite 0.5s;
+}
+
+.neu-hero-dot-3 {
+  width: 0.5rem;
+  height: 0.5rem;
+  top: 2rem;
+  left: 0.5rem;
+  background: var(--neu-primary-dark);
+  animation: heroDot 3s ease-in-out infinite 1s;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes heroDot {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
 }
 
 .neu-title {

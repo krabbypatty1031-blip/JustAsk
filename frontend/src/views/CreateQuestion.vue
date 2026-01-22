@@ -12,7 +12,7 @@ const title = ref('')
 const content = ref('')
 const activeField = ref('title')
 
-const topics = ['生活瑣事', '健康養生', '尋找鄰居', '二手買賣', '閒聊']
+const topics = ['生活瑣事', '健康養生', '尋找鄰居', '二手買賣', '閒聊'，'科技']
 
 const selectTopic = (topic) => {
   title.value = `[${topic}] `
