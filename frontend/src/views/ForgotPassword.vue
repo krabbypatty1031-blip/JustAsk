@@ -395,20 +395,26 @@ const goToLogin = () => {
 .neu-forgot {
   min-height: 100vh;
   background: var(--neu-bg);
+  padding: 2rem 1.5rem 3rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 /* --- Header --- */
 .neu-forgot-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background: var(--neu-bg);
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+  height: 0;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .neu-back-btn {
+  position: absolute;
+  left: 0;
+  top: -0.25rem;
   width: 2.5rem;
   height: 2.5rem;
   background: var(--neu-bg);
@@ -434,40 +440,41 @@ const goToLogin = () => {
 }
 
 .neu-forgot-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--neu-text);
+  display: none;
 }
 
 .neu-header-spacer {
-  width: 2.5rem;
+  display: none;
 }
 
 /* --- Hero Section --- */
 .neu-hero {
   text-align: center;
-  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+  animation: fadeInDown 0.6s ease-out;
+  width: 100%;
+  max-width: 24rem;
 }
 
 .neu-hero-icon {
   width: 5rem;
   height: 5rem;
-  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  background: var(--neu-bg);
   border-radius: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.25rem;
-  color: white;
-  box-shadow: 8px 8px 20px rgba(20, 184, 166, 0.25),
-              -4px -4px 12px rgba(255, 255, 255, 0.5);
+  color: var(--neu-primary);
+  box-shadow: var(--neu-shadow-out);
 }
 
 .neu-hero-title {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   color: var(--neu-text);
   margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
 }
 
 .neu-hero-text {
@@ -480,9 +487,11 @@ const goToLogin = () => {
 .neu-steps {
   display: flex;
   justify-content: space-between;
-  padding: 0 2rem 1.5rem;
+  gap: 0.5rem;
+  padding: 0 0 1.5rem;
   max-width: 24rem;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0 auto 0.5rem;
   position: relative;
 }
 
@@ -490,8 +499,8 @@ const goToLogin = () => {
   content: '';
   position: absolute;
   top: 1.125rem;
-  left: calc(16.67% + 1.5rem);
-  right: calc(16.67% + 1.5rem);
+  left: 1.75rem;
+  right: 1.75rem;
   height: 2px;
   background: var(--neu-bg-dark);
 }
@@ -551,14 +560,22 @@ const goToLogin = () => {
 
 /* --- Form Section --- */
 .neu-form-section {
-  flex: 1;
-  padding: 1rem 1.5rem 2rem;
+  width: 100%;
+  max-width: 24rem;
+  background: var(--neu-bg);
+  border-radius: 2rem;
+  padding: 2rem;
+  box-shadow: var(--neu-shadow-out);
+  margin: 0 auto;
 }
 
 .neu-form {
-  max-width: 24rem;
-  margin: 0 auto;
-  animation: fadeInUp 0.5s ease backwards;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeInUp 0.6s ease-out 0.1s backwards;
 }
 
 .neu-form-title {
@@ -578,17 +595,17 @@ const goToLogin = () => {
 
 /* --- Form Group --- */
 .neu-form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .neu-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.625rem;
-  font-weight: 600;
   font-size: 0.9375rem;
-  color: var(--neu-text-muted);
+  font-weight: 600;
+  color: var(--neu-text);
+  padding-left: 0.25rem;
 }
 
 .neu-label svg {
@@ -597,6 +614,10 @@ const goToLogin = () => {
 
 .neu-input-wrapper {
   position: relative;
+  background: var(--neu-bg);
+  border-radius: 1rem;
+  box-shadow: var(--neu-shadow-in);
+  transition: all 0.3s ease;
 }
 
 .neu-input {
@@ -604,12 +625,11 @@ const goToLogin = () => {
   padding: 1rem 1.25rem;
   font-size: 1rem;
   font-weight: 500;
-  background: var(--neu-bg);
+  background: transparent;
   border: none;
   border-radius: 1rem;
   color: var(--neu-text);
-  box-shadow: var(--neu-shadow-in);
-  transition: all 0.3s ease;
+  outline: none;
 }
 
 .neu-input::placeholder {
@@ -617,19 +637,20 @@ const goToLogin = () => {
   font-weight: 400;
 }
 
-.neu-input:focus {
-  outline: none;
+.neu-input-wrapper:focus-within {
   box-shadow: var(--neu-shadow-in-deep),
               0 0 0 3px rgba(20, 184, 166, 0.15);
 }
 
 .neu-input.error {
-  box-shadow: var(--neu-shadow-in),
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.08),
+              inset -4px -4px 8px rgba(255, 255, 255, 0.9),
               0 0 0 2px rgba(239, 68, 68, 0.3);
 }
 
 .neu-input.valid {
-  box-shadow: var(--neu-shadow-in),
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.08),
+              inset -4px -4px 8px rgba(255, 255, 255, 0.9),
               0 0 0 2px rgba(16, 185, 129, 0.3);
 }
 
@@ -642,17 +663,28 @@ const goToLogin = () => {
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--neu-bg);
   border: none;
-  padding: 0.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   color: var(--neu-text-muted);
-  border-radius: 0.5rem;
+  box-shadow: var(--neu-shadow-out-sm);
   transition: all 0.2s ease;
 }
 
 .neu-toggle-btn:hover {
   color: var(--neu-primary);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.neu-toggle-btn:active {
+  box-shadow: var(--neu-shadow-in);
+  transform: translateY(-50%) scale(0.98);
 }
 
 .neu-error {
@@ -668,38 +700,65 @@ const goToLogin = () => {
 /* --- Buttons --- */
 .neu-btn {
   width: 100%;
-  padding: 1rem 1.5rem;
-  font-size: 1.0625rem;
+  padding: 1.125rem 2rem;
+  font-size: 1.125rem;
   font-weight: 700;
   border: none;
-  border-radius: 2rem;
+  border-radius: 3rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.neu-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.neu-btn:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .neu-btn-primary {
   background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   color: white;
-  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1),
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
               -4px -4px 10px rgba(255, 255, 255, 0.7),
-              0 4px 16px rgba(20, 184, 166, 0.35);
+              inset 0 -2px 6px rgba(0, 0, 0, 0.1),
+              inset 0 2px 6px rgba(255, 255, 255, 0.2);
 }
 
 .neu-btn-primary:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.12),
-              -6px -6px 12px rgba(255, 255, 255, 0.8),
-              0 8px 24px rgba(20, 184, 166, 0.45);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.18),
+              -6px -6px 14px rgba(255, 255, 255, 0.8),
+              inset 0 -2px 6px rgba(0, 0, 0, 0.1),
+              inset 0 2px 6px rgba(255, 255, 255, 0.2);
 }
 
 .neu-btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.15),
-              inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.12),
+              -2px -2px 6px rgba(255, 255, 255, 0.6),
+              inset 2px 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.neu-btn:focus-visible {
+  outline: none;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
+              -4px -4px 10px rgba(255, 255, 255, 0.7),
+              0 0 0 4px rgba(20, 184, 166, 0.3);
 }
 
 .neu-btn-primary:disabled {
@@ -710,13 +769,13 @@ const goToLogin = () => {
 .neu-btn-outline {
   background: var(--neu-bg);
   color: var(--neu-text);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--neu-shadow-out-sm);
 }
 
 .neu-btn-outline:hover {
   color: var(--neu-primary);
   transform: translateY(-2px);
-  box-shadow: var(--neu-shadow-out-lg);
+  box-shadow: var(--neu-shadow-out);
 }
 
 .neu-btn-outline:active {
