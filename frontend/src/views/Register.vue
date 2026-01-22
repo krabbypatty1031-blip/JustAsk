@@ -148,7 +148,8 @@ const handleRegister = async () => {
     const response = await axios.post('/users/register', {
       username: username.value,
       phone: phone.value,
-      password: password.value
+      password: password.value,
+      confirmPassword: confirmPassword.value
     })
 
     if (response.data.success) {

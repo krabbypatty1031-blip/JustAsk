@@ -3,6 +3,21 @@ var router = express.Router();
 const { connectToDB, ObjectId } = require('../utils/db');
 const { verifyAccessToken } = require('../utils/jwt');
 
+// Available tags for questions
+const AVAILABLE_TAGS = [
+  { id: 'tech', name: '科技', color: '#007bff' },
+  { id: 'life', name: '生活', color: '#28a745' },
+  { id: 'health', name: '健康', color: '#dc3545' },
+  { id: 'education', name: '教育', color: '#ffc107' },
+  { id: 'entertainment', name: '娛樂', color: '#6f42c1' },
+  { id: 'other', name: '其他', color: '#6c757d' }
+];
+
+// GET /questions/tags - Get all available tags
+router.get('/tags', function(req, res) {
+  res.json({ success: true, data: AVAILABLE_TAGS });
+});
+
 // Middleware to check if user is logged in (supports both session and JWT)
 function requireLogin(req, res, next) {
   // First try JWT from Authorization header
@@ -53,6 +68,7 @@ router.get('/', async function(req, res) {
       _id: q._id.toString(),
       title: q.title,
       content: q.content,
+      tags: q.tags || [],
       authorId: q.author?.id,
       authorName: q.author?.username || '匿名用戶',
       createdAt: q.createdAt,
@@ -79,17 +95,25 @@ router.get('/', async function(req, res) {
 
 // POST /questions - Create a new question
 router.post('/', requireLogin, async function(req, res) {
-  const { title, content } = req.body;
-  if (!title || !content) {
-    return res.status(400).json({ success: false, message: '標題和內容不能為空' });
+  const { title, content, tags } = req.body;
+  if (!title || !title.trim()) {
+    return res.status(400).json({ success: false, message: '標題不能為空' });
+  }
+
+  // Validate tags (optional, must be valid tag IDs if provided)
+  let validTags = [];
+  if (tags && Array.isArray(tags)) {
+    const validTagIds = AVAILABLE_TAGS.map(t => t.id);
+    validTags = tags.filter(t => validTagIds.includes(t));
   }
 
   let db;
   try {
     db = await connectToDB();
     const newQuestion = {
-      title,
-      content,
+      title: title.trim(),
+      content: content ? content.trim() : '',  // 詳細內容為可選
+      tags: validTags,  // 標籤為可選
       author: {
         id: req.user.id,
         username: req.user.username
@@ -106,6 +130,7 @@ router.post('/', requireLogin, async function(req, res) {
       _id: result.insertedId.toString(),
       title: newQuestion.title,
       content: newQuestion.content,
+      tags: newQuestion.tags,
       authorId: newQuestion.author.id,
       authorName: newQuestion.author.username,
       createdAt: newQuestion.createdAt,
@@ -146,6 +171,7 @@ router.get('/:id', async function(req, res) {
       _id: question._id.toString(),
       title: question.title,
       content: question.content,
+      tags: question.tags || [],
       authorId: question.author?.id,
       authorName: question.author?.username || '匿名用戶',
       createdAt: question.createdAt,
@@ -260,6 +286,7 @@ router.post('/:id/answers', requireLogin, async function(req, res) {
       _id: updatedQuestion._id.toString(),
       title: updatedQuestion.title,
       content: updatedQuestion.content,
+      tags: updatedQuestion.tags || [],
       authorId: updatedQuestion.author?.id,
       authorName: updatedQuestion.author?.username || '匿名用戶',
       createdAt: updatedQuestion.createdAt,
