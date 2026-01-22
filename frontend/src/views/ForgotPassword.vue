@@ -168,22 +168,16 @@ const goToLogin = () => {
 <template>
   <div class="neu-forgot">
     <!-- Header -->
-    <header class="neu-forgot-header">
-      <button class="neu-back-btn" @click="router.back()" aria-label="返回">
+    <header class="neu-header">
+      <button class="neu-back-btn" @click="router.back()" aria-label="??">
         <Icon name="arrow-left" :size="24" />
       </button>
-      <h1 class="neu-forgot-title">重置密碼</h1>
-      <div class="neu-header-spacer"></div>
-    </header>
-
-    <!-- Hero Section -->
-    <div class="neu-hero">
-      <div class="neu-hero-icon">
-        <Icon name="lock-closed" :size="40" :stroke-width="1.5" />
+      <div class="neu-logo">
+        <Icon name="lock-closed" :size="32" :stroke-width="1.5" />
       </div>
-      <h2 class="neu-hero-title">忘記密碼了嗎？</h2>
-      <p class="neu-hero-text">別擔心，我們來幫您</p>
-    </div>
+      <h1 class="neu-title">????</h1>
+      <p class="neu-subtitle">?????????</p>
+    </header>
 
     <!-- Step Indicator -->
     <div class="neu-steps">
@@ -402,19 +396,20 @@ const goToLogin = () => {
 }
 
 /* --- Header --- */
-.neu-forgot-header {
+.neu-header {
   position: relative;
+  text-align: center;
+  margin-bottom: 2rem;
   width: 100%;
   max-width: 24rem;
-  height: 0;
-  margin: 0 auto;
-  padding: 0;
+  animation: fadeInDown 0.6s ease-out;
 }
 
 .neu-back-btn {
   position: absolute;
   left: 0;
-  top: -0.25rem;
+  top: 0;
+  z-index: 2;
   width: 2.5rem;
   height: 2.5rem;
   background: var(--neu-bg);
@@ -439,24 +434,7 @@ const goToLogin = () => {
   box-shadow: var(--neu-shadow-in);
 }
 
-.neu-forgot-title {
-  display: none;
-}
-
-.neu-header-spacer {
-  display: none;
-}
-
-/* --- Hero Section --- */
-.neu-hero {
-  text-align: center;
-  margin-bottom: 2rem;
-  animation: fadeInDown 0.6s ease-out;
-  width: 100%;
-  max-width: 24rem;
-}
-
-.neu-hero-icon {
+.neu-logo {
   width: 5rem;
   height: 5rem;
   background: var(--neu-bg);
@@ -469,7 +447,7 @@ const goToLogin = () => {
   box-shadow: var(--neu-shadow-out);
 }
 
-.neu-hero-title {
+.neu-title {
   font-size: 2rem;
   font-weight: 800;
   color: var(--neu-text);
@@ -477,7 +455,7 @@ const goToLogin = () => {
   letter-spacing: -0.5px;
 }
 
-.neu-hero-text {
+.neu-subtitle {
   font-size: 1rem;
   color: var(--neu-text-muted);
   font-weight: 500;
@@ -921,16 +899,23 @@ const goToLogin = () => {
 
 /* --- Responsive --- */
 @media (max-width: 400px) {
-  .neu-hero {
-    padding: 1.5rem 1rem;
-  }
-
-  .neu-hero-title {
-    font-size: 1.5rem;
+  .neu-forgot {
+    padding: 1.5rem 1rem 2.5rem;
   }
 
   .neu-form-section {
-    padding: 1rem 1rem 2rem;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .neu-title {
+    font-size: 1.75rem;
+  }
+
+  .neu-logo {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1.25rem;
   }
 
   .neu-btn-group {
