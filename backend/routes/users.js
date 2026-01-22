@@ -33,17 +33,35 @@ router.get('/register', function(req, res) {
   res.render('register', { error: null });
 });
 
+// GET login page
+router.get('/login', function(req, res) {
+  // Check if redirected from successful registration
+  const message = req.query.registered === 'true' ? '註冊成功！現在您可以登錄了。' : null;
+  res.render('login', { error: null, message: message });
+});
+
 // POST register
 router.post('/register', async function(req, res) {
   const { username, phone, password, confirmPassword } = req.body;
   
+  // Check if request expects JSON (API call) or HTML (form submission)
+  const wantsJSON = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
+  
+  // Helper function to send error response
+  const sendError = (status, message) => {
+    if (wantsJSON) {
+      return res.status(status).json({ success: false, message });
+    }
+    return res.render('register', { error: message });
+  };
+  
   // Validate phone number (8 digits)
   if (!/^\d{8}$/.test(phone)) {
-    return res.status(400).json({ success: false, message: '手機號必須是8位數字，請重新輸入。' });
+    return sendError(400, '手機號必須是8位數字，請重新輸入。');
   }
 
   if (password !== confirmPassword) {
-    return res.status(400).json({ success: false, message: '兩次輸入的密碼不一致，請重新輸入。' });
+    return sendError(400, '兩次輸入的密碼不一致，請重新輸入。');
   }
 
   let db;
@@ -56,9 +74,9 @@ router.post('/register', async function(req, res) {
     
     if (existingUser) {
       if (existingUser.username === username) {
-        return res.status(400).json({ success: false, message: '這個名字已經被佔用了，請換一個。' });
+        return sendError(400, '這個名字已經被佔用了，請換一個。');
       } else {
-        return res.status(400).json({ success: false, message: '這個手機號已經註冊過了。' });
+        return sendError(400, '這個手機號已經註冊過了。');
       }
     }
 
@@ -70,10 +88,15 @@ router.post('/register', async function(req, res) {
       createdAt: new Date()
     });
 
-    res.json({ success: true, message: '註冊成功！現在您可以登錄了。' });
+    // Success response
+    if (wantsJSON) {
+      return res.json({ success: true, message: '註冊成功！現在您可以登錄了。' });
+    }
+    // Redirect to login page with success message for form submission
+    return res.redirect('/users/login?registered=true');
   } catch (err) {
     console.error('Error in POST /register:', err);
-    res.status(500).json({ success: false, message: '註冊時出了一點小問題，請稍後再試。' });
+    return sendError(500, '註冊時出了一點小問題，請稍後再試。');
   } finally {
     if (db) await db.client.close();
   }
@@ -82,6 +105,18 @@ router.post('/register', async function(req, res) {
 // POST login
 router.post('/login', async function(req, res) {
   const { username, phone, password } = req.body;
+  
+  // Check if request expects JSON (API call) or HTML (form submission)
+  const wantsJSON = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
+  
+  // Helper function to send error response
+  const sendError = (status, message) => {
+    if (wantsJSON) {
+      return res.status(status).json({ success: false, message });
+    }
+    return res.render('login', { error: message, message: null });
+  };
+  
   let db;
   
   try {
@@ -89,12 +124,12 @@ router.post('/login', async function(req, res) {
     // Find user by username AND phone
     const user = await db.collection('Users').findOne({ username, phone });
     if (!user) {
-      return res.status(401).json({ success: false, message: '名字或手機號不正確，請檢查後重新輸入。' });
+      return sendError(401, '名字或手機號不正確，請檢查後重新輸入。');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: '密碼不正確，請重新輸入。' });
+      return sendError(401, '密碼不正確，請重新輸入。');
     }
 
     // Set session
@@ -104,10 +139,15 @@ router.post('/login', async function(req, res) {
       phone: user.phone
     };
 
-    res.json({ success: true, message: '登錄成功！', user: req.session.user });
+    // Success response
+    if (wantsJSON) {
+      return res.json({ success: true, message: '登錄成功！', user: req.session.user });
+    }
+    // Redirect to home page for form submission
+    return res.redirect('/');
   } catch (err) {
     console.error('Error in POST /login:', err);
-    res.status(500).json({ success: false, message: '登錄時出了一點小問題，請稍後再試。' });
+    return sendError(500, '登錄時出了一點小問題，請稍後再試。');
   } finally {
     if (db) await db.client.close();
   }
