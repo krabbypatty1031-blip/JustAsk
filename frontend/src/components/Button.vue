@@ -63,9 +63,9 @@ const buttonClasses = computed(() => {
 
   // Size classes
   const sizeMap = {
-    sm: 'px-4 py-2 text-sm min-h-[36px] rounded-lg',
-    md: 'px-6 py-3 text-base min-h-[44px] rounded-xl',
-    lg: 'px-8 py-4 text-lg min-h-[52px] rounded-2xl'
+    sm: 'px-4 py-2 text-sm min-h-[40px] rounded-lg',
+    md: 'px-6 py-3 text-base min-h-[48px] rounded-xl',
+    lg: 'px-8 py-4 text-lg min-h-[56px] rounded-2xl'
   }
   classes.push(sizeMap[props.size])
 
@@ -73,7 +73,7 @@ const buttonClasses = computed(() => {
   if (props.disabled || props.loading) {
     classes.push('opacity-60 cursor-not-allowed')
   } else {
-    classes.push('cursor-pointer')
+    classes.push('cursor-pointer neu-ripple')
   }
 
   // Width

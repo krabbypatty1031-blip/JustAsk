@@ -72,9 +72,9 @@ const inputClasses = computed(() => {
 
   // Size classes
   const sizeMap = {
-    sm: 'px-4 py-2 text-sm min-h-[36px]',
-    md: 'px-4 py-3 text-base min-h-[44px]',
-    lg: 'px-6 py-4 text-lg min-h-[52px]'
+    sm: 'px-4 py-2 text-sm min-h-[40px]',
+    md: 'px-4 py-3 text-base min-h-[52px]',
+    lg: 'px-6 py-4 text-lg min-h-[60px]'
   }
   classes.push(sizeMap[props.size])
 
@@ -187,6 +187,7 @@ const togglePasswordVisibility = () => {
 .input-base {
   @apply w-full rounded-xl border-2;
   @apply transition-all duration-200;
+  border: var(--neu-border);
   @apply focus:outline-none focus:ring-2 focus:ring-offset-0;
   @apply placeholder:text-slate-400;
   @apply font-medium;

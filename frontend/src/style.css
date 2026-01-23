@@ -48,6 +48,8 @@
   --neu-bg: #EFEEEE;
   --neu-bg-dark: #E0DFDF;
   --neu-bg-light: #FFFFFF;
+  --neu-border: 1px solid rgba(0, 0, 0, 0.06);
+  --neu-border-light: 1px solid rgba(255, 255, 255, 0.2);
   --neu-primary: #14b8a6;
   --neu-primary-dark: #0d9488;
   --neu-primary-light: #5eead4;
@@ -64,6 +66,34 @@
   --neu-shadow-out-lg: 12px 12px 24px rgba(0, 0, 0, 0.12), -12px -12px 24px rgba(255, 255, 255, 0.95);
   --neu-shadow-in: inset 4px 4px 8px rgba(0, 0, 0, 0.08), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
   --neu-shadow-in-deep: inset 6px 6px 12px rgba(0, 0, 0, 0.12), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
+}
+
+/* --- Micro-interactions --- */
+.neu-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.neu-ripple::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.1) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.4s, opacity 0.8s;
+}
+
+.neu-ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
 }
 
 html {

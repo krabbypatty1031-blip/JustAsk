@@ -255,7 +255,7 @@ const handleThank = async (answer) => {
   <div class="neu-detail">
     <!-- Top Navigation Bar -->
     <header class="neu-nav-bar">
-      <button class="neu-back-btn" @click="router.back()" aria-label="返回">
+      <button class="neu-back-btn neu-ripple" @click="router.back()" aria-label="返回">
         <Icon name="arrow-left" :size="24" />
       </button>
       <span class="neu-nav-title">詳情</span>
@@ -280,7 +280,7 @@ const handleThank = async (answer) => {
             <span class="neu-post-time">{{ new Date(question.createdAt).toLocaleString() }}</span>
           </div>
           <button
-            class="neu-speak-btn"
+            class="neu-speak-btn neu-ripple"
             @click="handleToggleSpeech(`${question.title}。${question.content}`, 'question')"
             :class="{ 'active': isSpeakingId === 'question', 'loading': isLoadingVoice === 'question' }"
             :aria-label="isSpeakingId === 'question' ? '停止朗讀' : '朗讀問題'"
@@ -344,7 +344,7 @@ const handleThank = async (answer) => {
 
             <div class="neu-answer-actions">
               <button
-                class="neu-action-btn"
+                class="neu-action-btn neu-ripple"
                 @click="handleToggleSpeech(answer.content, answer._id)"
                 :class="{ 'active': isSpeakingId === answer._id, 'loading': isLoadingVoice === answer._id }"
                 :disabled="isLoadingVoice === answer._id"
@@ -355,7 +355,7 @@ const handleThank = async (answer) => {
               </button>
 
               <button
-                class="neu-action-btn thank-btn"
+                class="neu-action-btn thank-btn neu-ripple"
                 @click="handleThank(answer)"
                 :class="{ 'thanked': answer.hasThanked }"
                 :disabled="answer.hasThanked"
@@ -374,7 +374,7 @@ const handleThank = async (answer) => {
 
     <!-- Bottom Input Bar -->
     <div class="neu-bottom-bar">
-      <button class="neu-input-trigger" @click="openReplyModal">
+      <button class="neu-input-trigger neu-ripple" @click="openReplyModal">
         <Icon name="pencil" :size="18" />
         <span>我來回答這個問題...</span>
       </button>
@@ -400,7 +400,7 @@ const handleThank = async (answer) => {
           ></textarea>
 
           <div class="neu-sheet-footer">
-            <button class="neu-submit-btn" @click="submitAnswer" :disabled="!newAnswer.trim()">
+            <button class="neu-submit-btn neu-ripple" @click="submitAnswer" :disabled="!newAnswer.trim()">
               <Icon name="paper-airplane" :size="20" />
               發布回答
             </button>
@@ -443,10 +443,10 @@ const handleThank = async (answer) => {
 }
 
 .neu-back-btn {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3rem; /* Increased from 2.5rem */
+  height: 3rem;
   background: var(--neu-bg);
-  border: none;
+  border: var(--neu-border);
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -506,6 +506,7 @@ const handleThank = async (answer) => {
   padding: 1.5rem;
   box-shadow: var(--neu-shadow-out);
   margin-bottom: 1.5rem;
+  border: var(--neu-border);
 }
 
 .neu-card-header {
@@ -553,9 +554,10 @@ const handleThank = async (answer) => {
   align-items: center;
   gap: 0.375rem;
   background: var(--neu-bg);
-  border: none;
+  border: var(--neu-border);
   border-radius: 2rem;
-  padding: 0.5rem 0.875rem;
+  padding: 0.75rem 1rem; /* Increased padding */
+  min-height: 48px; /* Touch target */
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--neu-text-muted);
@@ -676,6 +678,22 @@ const handleThank = async (answer) => {
   margin-bottom: 1rem;
   box-shadow: var(--neu-shadow-out);
   transition: all 0.3s ease;
+  border: var(--neu-border);
+}
+
+.neu-answer-card + .neu-answer-card {
+  margin-top: 1.5rem;
+  position: relative;
+}
+
+.neu-answer-card + .neu-answer-card::before {
+  content: '';
+  position: absolute;
+  top: -0.75rem;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: var(--neu-bg-dark);
 }
 
 .neu-answer-card.highlight {
@@ -741,8 +759,8 @@ const handleThank = async (answer) => {
   align-items: center;
   gap: 0.375rem;
   background: var(--neu-bg);
-  border: none;
-  padding: 0.5rem 1rem;
+  border: var(--neu-border);
+  padding: 0.75rem 1.25rem; /* Increased padding */
   border-radius: 2rem;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -750,6 +768,7 @@ const handleThank = async (answer) => {
   cursor: pointer;
   box-shadow: var(--neu-shadow-out-sm);
   transition: all 0.2s ease;
+  min-height: 48px; /* Touch target */
 }
 
 .neu-action-btn:hover {

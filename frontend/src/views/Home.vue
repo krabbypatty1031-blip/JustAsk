@@ -141,7 +141,7 @@ onMounted(() => {
         <div class="neu-header-actions">
           <!-- Font Size Toggle -->
           <button
-            class="neu-icon-btn"
+            class="neu-icon-btn neu-ripple"
             @click="toggleFontSize"
             :aria-label="`調整字體大小，當前: ${['標準', '大', '特大'][fontSizeLevel]}`"
           >
@@ -151,7 +151,7 @@ onMounted(() => {
           <!-- User Avatar -->
           <div class="neu-avatar-wrapper" v-if="currentUser">
             <button
-              class="neu-avatar-btn"
+              class="neu-avatar-btn neu-ripple"
               @click="toggleUserMenu"
               :aria-label="`用戶選單，${currentUser.username}`"
               :aria-expanded="showUserMenu"
@@ -176,7 +176,7 @@ onMounted(() => {
           </div>
 
           <!-- Login Button -->
-          <button v-else class="neu-login-btn" @click="router.push('/login')">
+          <button v-else class="neu-login-btn neu-ripple" @click="router.push('/login')">
             登入
           </button>
         </div>
@@ -250,7 +250,7 @@ onMounted(() => {
     <section class="neu-content">
       <div class="neu-section-header">
         <h3 class="neu-section-title">最新動態</h3>
-        <button class="neu-refresh-btn" @click="fetchQuestions" aria-label="重新整理問題列表">
+        <button class="neu-refresh-btn neu-ripple" @click="fetchQuestions" aria-label="重新整理問題列表">
           <Icon name="arrow-path" :size="20" />
         </button>
       </div>
@@ -295,10 +295,10 @@ onMounted(() => {
 
 /* Icon Button */
 .neu-icon-btn {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3rem; /* Increased from 2.75rem */
+  height: 3rem;
   background: var(--neu-bg);
-  border: none;
+  border: var(--neu-border);
   border-radius: 0.875rem;
   display: flex;
   align-items: center;
@@ -451,6 +451,7 @@ onMounted(() => {
   overflow: hidden;
   box-shadow: 8px 8px 20px rgba(20, 184, 166, 0.25),
               -4px -4px 12px rgba(255, 255, 255, 0.5);
+  border: var(--neu-border-light);
 }
 
 .neu-welcome-content {

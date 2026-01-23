@@ -80,7 +80,7 @@ onMounted(() => {
       <article
         v-for="(question, index) in questions"
         :key="question._id"
-        class="neu-question-card"
+        class="neu-question-card neu-ripple"
         @click="handleNavigate(question._id)"
         :style="{ animationDelay: index * 50 + 'ms' }"
       >
@@ -148,6 +148,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.5s ease backwards;
+  border: var(--neu-border);
 }
 
 .neu-question-card:hover {

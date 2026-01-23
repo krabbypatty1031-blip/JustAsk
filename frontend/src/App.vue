@@ -101,7 +101,7 @@ const handleNavClick = (item) => {
         <button
           v-for="item in navItems"
           :key="item.path"
-          class="neu-nav-btn"
+          class="neu-nav-btn neu-ripple"
           :class="{
             'active': isRouteActive(item),
             'special': item.special
@@ -173,6 +173,7 @@ const handleNavClick = (item) => {
   padding: 0.75rem 1rem calc(1rem + var(--sab));
   z-index: 50;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
+  border-top: var(--neu-border);
 }
 
 .neu-nav-inner {
@@ -194,18 +195,20 @@ const handleNavClick = (item) => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 4rem;
+  min-height: 48px; /* Touch target */
 }
 
 .neu-nav-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3.25rem; /* Increased from 2.75rem (44px) to 52px */
+  height: 3.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   background: var(--neu-bg);
   color: var(--neu-text-muted);
   transition: all 0.3s ease;
+  border: var(--neu-border);
 }
 
 .neu-nav-btn:hover .neu-nav-icon {
@@ -225,14 +228,15 @@ const handleNavClick = (item) => {
 }
 
 .neu-nav-btn.special .neu-nav-icon {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 4rem; /* Increased size */
+  height: 4rem;
   background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
   color: white;
   border-radius: 50%;
   box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
               -3px -3px 8px rgba(255, 255, 255, 0.8),
               0 4px 16px rgba(20, 184, 166, 0.35);
+  border: none;
 }
 
 .neu-nav-btn.special:hover .neu-nav-icon {
