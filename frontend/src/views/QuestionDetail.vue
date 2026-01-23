@@ -16,22 +16,82 @@ const isLoading = ref(true)
 const showReplyModal = ref(false)
 const answersContainer = ref(null)
 const isSpeakingId = ref(null)
+const isLoadingVoice = ref(null) // Track which item is loading voice
+const availableVoice = ref(null) // Cache the best available Chinese voice
 
-const handleToggleSpeech = (text, id) => {
+// Preload and find the best Chinese voice
+const loadVoices = () => {
+  const voices = window.speechSynthesis.getVoices()
+  if (voices.length === 0) return false
+  
+  // Priority: zh-HK > zh-TW > zh-CN > any zh
+  const priorities = ['zh-HK', 'zh-TW', 'zh-CN', 'zh']
+  for (const lang of priorities) {
+    const voice = voices.find(v => v.lang.startsWith(lang))
+    if (voice) {
+      availableVoice.value = voice
+      return true
+    }
+  }
+  // Fallback: use default voice if no Chinese voice found
+  availableVoice.value = voices[0] || null
+  return true
+}
+
+// Initialize voices on mount
+onMounted(() => {
+  fetchQuestion()
+  // Try to load voices immediately
+  if (!loadVoices()) {
+    // If voices not ready, wait for them
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices, { once: true })
+  }
+})
+
+const handleToggleSpeech = async (text, id) => {
+  // If already speaking this item, stop it
   if (isSpeakingId.value === id) {
     window.speechSynthesis.cancel()
     isSpeakingId.value = null
     return
   }
 
+  // Cancel any ongoing speech
   window.speechSynthesis.cancel()
+  
+  // Show loading state
+  isLoadingVoice.value = id
+
+  // Ensure voices are loaded (with timeout)
+  if (!availableVoice.value) {
+    const voicesLoaded = await new Promise(resolve => {
+      if (loadVoices()) {
+        resolve(true)
+        return
+      }
+      const timeout = setTimeout(() => resolve(false), 2000)
+      const handler = () => {
+        clearTimeout(timeout)
+        resolve(loadVoices())
+      }
+      window.speechSynthesis.addEventListener('voiceschanged', handler, { once: true })
+    })
+    
+    if (!voicesLoaded || !availableVoice.value) {
+      isLoadingVoice.value = null
+      showToast('語音功能不可用，請檢查瀏覽器設置', 'error')
+      return
+    }
+  }
 
   const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'zh-HK'
+  utterance.voice = availableVoice.value
+  utterance.lang = availableVoice.value.lang
   utterance.rate = 0.85
   utterance.pitch = 1.0
 
   utterance.onstart = () => {
+    isLoadingVoice.value = null
     isSpeakingId.value = id
   }
 
@@ -40,14 +100,41 @@ const handleToggleSpeech = (text, id) => {
   }
 
   utterance.onerror = (event) => {
+    isLoadingVoice.value = null
     isSpeakingId.value = null
     if (event.error === 'interrupted' || event.error === 'canceled') {
       return
     }
-    showToast('語音播報失敗', 'error')
+    showToast('語音播報失敗，請稍後再試', 'error')
   }
 
+  // Chrome bug workaround: pause/resume for long texts
   window.speechSynthesis.speak(utterance)
+  
+  // Keep speech alive for Chrome (bug where it stops after ~15s)
+  const keepAlive = setInterval(() => {
+    if (!window.speechSynthesis.speaking) {
+      clearInterval(keepAlive)
+      return
+    }
+    window.speechSynthesis.pause()
+    window.speechSynthesis.resume()
+  }, 10000)
+  
+  utterance.onend = () => {
+    clearInterval(keepAlive)
+    isSpeakingId.value = null
+  }
+  
+  utterance.onerror = (event) => {
+    clearInterval(keepAlive)
+    isLoadingVoice.value = null
+    isSpeakingId.value = null
+    if (event.error === 'interrupted' || event.error === 'canceled') {
+      return
+    }
+    showToast('語音播報失敗，請稍後再試', 'error')
+  }
 }
 
 onUnmounted(() => {
@@ -126,9 +213,7 @@ const handleThank = async (answer) => {
   }
 }
 
-onMounted(() => {
-  fetchQuestion()
-})
+// onMounted moved to after loadVoices function
 </script>
 
 <template>
@@ -162,11 +247,13 @@ onMounted(() => {
           <button
             class="neu-speak-btn"
             @click="handleToggleSpeech(`${question.title}。${question.content}`, 'question')"
-            :class="{ 'active': isSpeakingId === 'question' }"
+            :class="{ 'active': isSpeakingId === 'question', 'loading': isLoadingVoice === 'question' }"
             :aria-label="isSpeakingId === 'question' ? '停止朗讀' : '朗讀問題'"
+            :disabled="isLoadingVoice === 'question'"
           >
-            <Icon :name="isSpeakingId === 'question' ? 'stop' : 'speaker-wave'" :size="18" />
-            <span>{{ isSpeakingId === 'question' ? '停止' : '聽問題' }}</span>
+            <span v-if="isLoadingVoice === 'question'" class="neu-btn-spinner"></span>
+            <Icon v-else :name="isSpeakingId === 'question' ? 'stop' : 'speaker-wave'" :size="18" />
+            <span>{{ isLoadingVoice === 'question' ? '載入中' : (isSpeakingId === 'question' ? '停止' : '聽問題') }}</span>
           </button>
         </div>
 
@@ -224,10 +311,12 @@ onMounted(() => {
               <button
                 class="neu-action-btn"
                 @click="handleToggleSpeech(answer.content, answer._id)"
-                :class="{ 'active': isSpeakingId === answer._id }"
+                :class="{ 'active': isSpeakingId === answer._id, 'loading': isLoadingVoice === answer._id }"
+                :disabled="isLoadingVoice === answer._id"
               >
-                <Icon :name="isSpeakingId === answer._id ? 'stop' : 'speaker-wave'" :size="16" />
-                {{ isSpeakingId === answer._id ? '停止' : '聽回答' }}
+                <span v-if="isLoadingVoice === answer._id" class="neu-btn-spinner-sm"></span>
+                <Icon v-else :name="isSpeakingId === answer._id ? 'stop' : 'speaker-wave'" :size="16" />
+                {{ isLoadingVoice === answer._id ? '載入中' : (isSpeakingId === answer._id ? '停止' : '聽回答') }}
               </button>
 
               <button
@@ -448,6 +537,31 @@ onMounted(() => {
   background: var(--neu-error);
   color: white;
   box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.neu-speak-btn.loading,
+.neu-action-btn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.neu-btn-spinner,
+.neu-btn-spinner-sm {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.neu-btn-spinner {
+  width: 1rem;
+  height: 1rem;
+}
+
+.neu-btn-spinner-sm {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .neu-question-title {
