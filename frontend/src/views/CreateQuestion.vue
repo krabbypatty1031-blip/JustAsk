@@ -22,6 +22,26 @@ const selectTopic = (topic) => {
 const isListening = ref(false)
 const recognition = ref(null)
 const isSpeechSupported = ref(false)
+const speechLang = ref('zh-TW') // 默认繁体中文
+
+const languageOptions = [
+  { code: 'zh-TW', label: '普通話' },
+  { code: 'yue-Hant-HK', label: '粵語' }
+]
+
+const toggleLanguage = () => {
+  const currentIndex = languageOptions.findIndex(lang => lang.code === speechLang.value)
+  const nextIndex = (currentIndex + 1) % languageOptions.length
+  speechLang.value = languageOptions[nextIndex].code
+
+  // 如果正在录音，重启识别以应用新语言
+  if (isListening.value && recognition.value) {
+    recognition.value.stop()
+    setTimeout(() => {
+      recognition.value.start()
+    }, 100)
+  }
+}
 
 onMounted(() => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -30,11 +50,11 @@ onMounted(() => {
     recognition.value = new SpeechRecognition()
     recognition.value.continuous = true
     recognition.value.interimResults = true
-    recognition.value.lang = 'zh-TW'
 
     recognition.value.onstart = () => {
       isListening.value = true
-      showToast(`正在聆聽 (${activeField.value === 'title' ? '標題' : '內容'})...`, 'info')
+      const langLabel = languageOptions.find(lang => lang.code === speechLang.value)?.label || '普通話'
+      showToast(`正在聆聽 (${langLabel} - ${activeField.value === 'title' ? '標題' : '內容'})...`, 'info')
     }
 
     recognition.value.onend = () => {
@@ -81,6 +101,7 @@ const toggleSpeech = () => {
   if (isListening.value) {
     recognition.value.stop()
   } else {
+    recognition.value.lang = speechLang.value
     recognition.value.start()
   }
 }
@@ -118,7 +139,7 @@ const handleSubmit = async () => {
   <div class="neu-create">
     <!-- Header -->
     <header class="neu-create-header">
-      <button class="neu-back-btn" @click="router.back()" aria-label="取消">
+      <button class="neu-back-btn" @click="router.push('/')" aria-label="取消">
         <Icon name="x-mark" :size="24" />
       </button>
       <h1 class="neu-create-title">發布提問</h1>
@@ -185,15 +206,24 @@ const handleSubmit = async () => {
           </div>
         </transition>
 
-        <button
-          class="neu-speech-btn"
-          :class="{ 'active': isListening }"
-          @click="toggleSpeech"
-          :aria-label="isListening ? '停止語音輸入' : '開始語音輸入'"
-        >
-          <Icon v-if="isListening" name="stop" :size="32" />
-          <Icon v-else name="microphone" :size="32" />
-        </button>
+        <div class="neu-speech-controls">
+          <button
+            class="neu-speech-btn"
+            :class="{ 'active': isListening }"
+            @click="toggleSpeech"
+            :aria-label="isListening ? '停止語音輸入' : '開始語音輸入'"
+          >
+            <Icon v-if="isListening" name="stop" :size="32" />
+            <Icon v-else name="microphone" :size="32" />
+          </button>
+          <button
+            class="neu-lang-btn"
+            @click="toggleLanguage"
+            :aria-label="'切換語言'"
+          >
+            {{ languageOptions.find(lang => lang.code === speechLang)?.label || '普通話' }}
+          </button>
+        </div>
         <span class="neu-speech-hint">{{ isListening ? '點擊停止' : '語音輸入' }}</span>
       </div>
 
@@ -405,6 +435,12 @@ const handleSubmit = async () => {
   position: relative;
 }
 
+.neu-speech-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .neu-speech-btn {
   width: 4.5rem;
   height: 4.5rem;
@@ -437,6 +473,32 @@ const handleSubmit = async () => {
               -3px -3px 8px rgba(255, 255, 255, 0.8),
               0 4px 16px rgba(20, 184, 166, 0.4);
   transform: scale(1.1);
+}
+
+.neu-lang-btn {
+  padding: 0.75rem 1.25rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--neu-text);
+  cursor: pointer;
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.3s ease;
+  min-width: 4rem;
+  white-space: nowrap;
+}
+
+.neu-lang-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+  color: var(--neu-primary);
+}
+
+.neu-lang-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-in);
 }
 
 .neu-speech-hint {

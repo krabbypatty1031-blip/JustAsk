@@ -105,8 +105,6 @@ const toggleFontSize = () => {
   const size = levels[fontSizeLevel.value]
   document.documentElement.style.setProperty('--app-scale', size)
   localStorage.setItem('user_font_pref', fontSizeLevel.value)
-  const labels = ['標準', '大', '特大']
-  showToast(`字體已調整為：${labels[fontSizeLevel.value]}`)
 }
 
 const handleLogout = async () => {
