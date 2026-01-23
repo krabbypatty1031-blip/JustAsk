@@ -163,6 +163,34 @@ router.get('/logout', function(req, res) {
   });
 });
 
+// POST verify-identity - Verify username and phone match before password reset
+router.post('/verify-identity', async function(req, res) {
+  const { username, phone } = req.body;
+  
+  if (!username || !phone) {
+    return res.status(400).json({ success: false, message: '請輸入用戶名和手機號碼' });
+  }
+
+  let db;
+  try {
+    db = await connectToDB();
+    const user = await db.collection('Users').findOne({ username, phone });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: '驗證失敗：用戶名與手機號不匹配。' });
+    }
+
+    // Identity verified successfully
+    res.json({ success: true, message: '身份驗證成功' });
+
+  } catch (err) {
+    console.error('Error in POST /verify-identity:', err);
+    res.status(500).json({ success: false, message: '驗證時出錯，請稍後再試。' });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
 // POST reset-password
 router.post('/reset-password', async function(req, res) {
   const { username, phone, newPassword } = req.body;

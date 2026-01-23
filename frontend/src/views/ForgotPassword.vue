@@ -106,7 +106,9 @@ const isStep2Valid = computed(() => {
   return !validateNewPassword(newPassword.value) && !validateConfirmNewPassword(confirmNewPassword.value)
 })
 
-const nextStep = () => {
+const isVerifying = ref(false)
+
+const nextStep = async () => {
   if (currentStep.value === 1) {
     touched.value.username = true
     touched.value.phone = true
@@ -117,6 +119,25 @@ const nextStep = () => {
       showToast('請檢查輸入內容', 'error')
       return
     }
+
+    // Verify identity before proceeding to Step 2
+    isVerifying.value = true
+    try {
+      const response = await axios.post('/users/verify-identity', {
+        username: username.value,
+        phone: phone.value
+      })
+
+      if (response.data.success) {
+        currentStep.value++
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || '用戶名與手機號不匹配', 'error')
+      return
+    } finally {
+      isVerifying.value = false
+    }
+    return
   }
 
   if (currentStep.value < totalSteps) {
@@ -276,9 +297,13 @@ const goToLogin = () => {
           </div>
 
           <!-- Next Button -->
-          <button type="submit" class="neu-btn neu-btn-primary">
-            <span>下一步</span>
-            <Icon name="arrow-right" :size="20" />
+          <button type="submit" class="neu-btn neu-btn-primary" :disabled="isVerifying">
+            <span v-if="!isVerifying">下一步</span>
+            <span v-else class="neu-loading">
+              <span class="neu-spinner"></span>
+              驗證中...
+            </span>
+            <Icon v-if="!isVerifying" name="arrow-right" :size="20" />
           </button>
 
           <!-- Back to Login -->
