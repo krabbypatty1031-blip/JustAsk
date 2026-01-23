@@ -160,7 +160,7 @@ const handleLogin = async () => {
         <div class="neu-hero-dot neu-hero-dot-3"></div>
       </div>
       <h1 class="neu-title">歡迎回來</h1>
-      <p class="neu-subtitle">登入 吾識JustAsk 繼續您的學習之旅</p>
+      <p class="neu-subtitle">登入 吾識JustAsk</p>
     </div>
 
     <!-- Form Card -->
@@ -196,7 +196,7 @@ const handleLogin = async () => {
         <div class="neu-field">
           <label for="phone" class="neu-label">
             <Icon name="bell" :size="16" class="neu-label-icon" />
-            手機號碼 (選填)
+            手機號碼
           </label>
           <div class="neu-input-wrapper" :class="{ 'neu-input-error': touched.phone && errors.phone, 'neu-input-valid': touched.phone && !errors.phone && phone }">
             <input
