@@ -93,7 +93,7 @@ router.post('/register', async function(req, res) {
       return res.json({ success: true, message: '註冊成功！現在您可以登錄了。' });
     }
     // Redirect to login page with success message for form submission
-    return res.redirect('/users/login?registered=true');
+    return res.redirect('/api/users/login?registered=true');
   } catch (err) {
     console.error('Error in POST /register:', err);
     return sendError(500, '註冊時出了一點小問題，請稍後再試。');

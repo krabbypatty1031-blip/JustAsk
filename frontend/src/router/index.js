@@ -27,7 +27,7 @@ router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth) return true
 
   try {
-    const response = await axios.get('/api/status')
+    const response = await axios.get('/status')
     if (response.data && response.data.user) return true
   } catch (error) {
     // Fall through to redirect when status check fails.

@@ -19,7 +19,7 @@ provide('currentUser', user)
 
 const checkStatus = async () => {
   try {
-    const response = await axios.get('/api/status')
+    const response = await axios.get('/status')
     if (response.data && response.data.user) {
       user.value = response.data.user
     } else {

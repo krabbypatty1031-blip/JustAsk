@@ -5,7 +5,7 @@ const { connectToDB, ObjectId } = require('../utils/db');
 /* GET home page. */
 router.get('/', async function(req, res, next) {
   if (!req.session || !req.session.user) {
-    return res.redirect('/users/login');
+    return res.redirect('/api/users/login');
   }
   res.render('index', { title: 'JustAsk 繁體中文問答社區' });
 });

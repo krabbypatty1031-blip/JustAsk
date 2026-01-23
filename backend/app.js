@@ -66,8 +66,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/users', usersRouter);
-app.use('/questions', questionsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/questions', questionsRouter);
 app.use('/api/auth', authRouter);
 app.use('/', indexRouter);
 

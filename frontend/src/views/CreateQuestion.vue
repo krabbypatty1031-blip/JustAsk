@@ -23,10 +23,11 @@ const isListening = ref(false)
 const recognition = ref(null)
 const isSpeechSupported = ref(false)
 const speechLang = ref('zh-TW') // 默认繁体中文
+const shouldRestartAfterStop = ref(false) // 标记是否需要在停止后重启
 
 const languageOptions = [
   { code: 'zh-TW', label: '普通話' },
-  { code: 'yue-Hant-HK', label: '粵語' }
+  { code: 'zh-HK', label: '粵語' }
 ]
 
 const toggleLanguage = () => {
@@ -34,12 +35,10 @@ const toggleLanguage = () => {
   const nextIndex = (currentIndex + 1) % languageOptions.length
   speechLang.value = languageOptions[nextIndex].code
 
-  // 如果正在录音，重启识别以应用新语言
+  // 如果正在录音，设置标记并停止，会在onend中重启
   if (isListening.value && recognition.value) {
+    shouldRestartAfterStop.value = true
     recognition.value.stop()
-    setTimeout(() => {
-      recognition.value.start()
-    }, 100)
   }
 }
 
@@ -59,12 +58,34 @@ onMounted(() => {
 
     recognition.value.onend = () => {
       isListening.value = false
+
+      // 如果需要重启（切换语言后），重新启动识别
+      if (shouldRestartAfterStop.value) {
+        shouldRestartAfterStop.value = false
+        setTimeout(() => {
+          if (recognition.value) {
+            recognition.value.lang = speechLang.value
+            recognition.value.start()
+          }
+        }, 100)
+      }
     }
 
     recognition.value.onerror = (event) => {
       console.error('Speech recognition error', event.error)
       isListening.value = false
-      showToast('語音識別出錯，請重試', 'error')
+      shouldRestartAfterStop.value = false // 清除重启标记
+
+      // 针对不同错误类型显示不同提示
+      if (event.error === 'network') {
+        showToast('網絡連接問題，請檢查網絡後重試', 'error')
+      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        showToast('請允許麥克風權限', 'error')
+      } else if (event.error === 'language-not-supported') {
+        showToast('當前語言不支持，請切換語言', 'error')
+      } else {
+        showToast('語音識別出錯，請重試', 'error')
+      }
     }
 
     recognition.value.onresult = (event) => {
@@ -87,6 +108,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  shouldRestartAfterStop.value = false
   if (recognition.value && isListening.value) {
     recognition.value.stop()
   }
@@ -98,11 +120,18 @@ const toggleSpeech = () => {
     return
   }
 
-  if (isListening.value) {
-    recognition.value.stop()
-  } else {
-    recognition.value.lang = speechLang.value
-    recognition.value.start()
+  try {
+    if (isListening.value) {
+      shouldRestartAfterStop.value = false // 用户主动停止，清除重启标记
+      recognition.value.stop()
+    } else {
+      recognition.value.lang = speechLang.value
+      recognition.value.start()
+    }
+  } catch (error) {
+    console.error('Toggle speech error:', error)
+    isListening.value = false
+    showToast('語音功能啟動失敗，請重試', 'error')
   }
 }
 
@@ -454,25 +483,54 @@ const handleSubmit = async () => {
   color: var(--neu-primary);
   box-shadow: var(--neu-shadow-out);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
 }
 
-.neu-speech-btn:hover {
+.neu-speech-btn:hover:not(.active) {
   transform: scale(1.05);
   box-shadow: var(--neu-shadow-out-lg);
 }
 
-.neu-speech-btn:active {
+.neu-speech-btn:active:not(.active) {
   transform: scale(0.95);
   box-shadow: var(--neu-shadow-in);
 }
 
 .neu-speech-btn.active {
-  background: linear-gradient(135deg, var(--neu-primary) 0%, var(--neu-primary-dark) 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15),
+  box-shadow: 6px 6px 12px rgba(220, 38, 38, 0.3),
               -3px -3px 8px rgba(255, 255, 255, 0.8),
-              0 4px 16px rgba(20, 184, 166, 0.4);
+              0 4px 16px rgba(239, 68, 68, 0.5);
   transform: scale(1.1);
+  animation: pulse-recording 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.neu-speech-btn.active::before {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.neu-speech-btn.active svg {
+  display: none;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 6px 6px 12px rgba(220, 38, 38, 0.3),
+                -3px -3px 8px rgba(255, 255, 255, 0.8),
+                0 4px 16px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 6px 6px 16px rgba(220, 38, 38, 0.4),
+                -3px -3px 8px rgba(255, 255, 255, 0.8),
+                0 6px 24px rgba(239, 68, 68, 0.7);
+  }
 }
 
 .neu-lang-btn {
