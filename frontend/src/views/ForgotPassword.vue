@@ -889,6 +889,7 @@ const goToLogin = () => {
 
 .neu-btn-group .neu-btn {
   flex: 1;
+  white-space: nowrap;
 }
 
 .neu-loading {
