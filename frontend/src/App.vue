@@ -7,6 +7,7 @@ import Icon from './components/Icon.vue'
 const router = useRouter()
 const route = useRoute()
 const user = ref(null)
+const isAuthChecked = ref(false) // 认证状态是否已检查完成
 
 const toast = ref({ show: false, message: '', type: 'info' })
 
@@ -16,6 +17,7 @@ const showToast = (message, type = 'info') => {
 }
 provide('showToast', showToast)
 provide('currentUser', user)
+provide('isAuthChecked', isAuthChecked) // 提供认证检查状态
 
 const checkStatus = async () => {
   try {
@@ -26,6 +28,9 @@ const checkStatus = async () => {
       user.value = null
     }
   } catch (error) { user.value = null }
+  finally {
+    isAuthChecked.value = true // 标记认证检查已完成
+  }
 }
 
 router.afterEach(() => { checkStatus() })

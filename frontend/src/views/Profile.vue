@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
 import { getAvatarUrl } from '../utils/avatar'
@@ -7,6 +7,7 @@ import Icon from '../components/Icon.vue'
 
 const router = useRouter()
 const currentUser = inject('currentUser')
+const isAuthChecked = inject('isAuthChecked') // 获取认证检查状态
 const showToast = inject('showToast')
 
 const activeTab = ref('questions')
@@ -39,11 +40,28 @@ const fetchMyData = async () => {
   }
 }
 
-onMounted(() => {
+// 等待认证检查完成后再决定是否跳转
+const checkAuthAndLoad = () => {
+  if (!isAuthChecked.value) return // 还没检查完，等待
+  
   if (!currentUser.value) {
     router.push('/login')
   } else {
     fetchMyData()
+  }
+}
+
+// 监听认证状态变化
+watch(isAuthChecked, (checked) => {
+  if (checked) {
+    checkAuthAndLoad()
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  // 如果认证已经检查完成，立即执行
+  if (isAuthChecked.value) {
+    checkAuthAndLoad()
   }
 })
 

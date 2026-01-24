@@ -1,5 +1,5 @@
 <script setup>
-import { ref, inject, onMounted, onUnmounted } from 'vue'
+import { ref, inject, onMounted, onUnmounted, watch } from 'vue'
 import axios from '../api/axios'
 import { useRouter } from 'vue-router'
 import Icon from '../components/Icon.vue'
@@ -8,16 +8,57 @@ const router = useRouter()
 const showToast = inject('showToast')
 const isLoading = ref(false)
 
-const title = ref('')
-const content = ref('')
+// 表单数据持久化 key
+const STORAGE_KEY = 'justask_draft_question'
+
+// 从 sessionStorage 恢复草稿
+const loadDraft = () => {
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const draft = JSON.parse(saved)
+      return draft
+    }
+  } catch (e) {
+    console.warn('Failed to load draft:', e)
+  }
+  return { title: '', content: '' }
+}
+
+const savedDraft = loadDraft()
+const title = ref(savedDraft.title)
+const content = ref(savedDraft.content)
 const activeField = ref('title')
+
+// 保存草稿到 sessionStorage
+const saveDraft = () => {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      title: title.value,
+      content: content.value
+    }))
+  } catch (e) {
+    console.warn('Failed to save draft:', e)
+  }
+}
+
+// 清除草稿
+const clearDraft = () => {
+  sessionStorage.removeItem(STORAGE_KEY)
+}
 
 const topics = ['科技', '生活瑣事', '健康養生', '尋找鄰居', '二手買賣', '閒聊']
 
 const selectTopic = (topic) => {
   title.value = `[${topic}] `
   activeField.value = 'title'
+  saveDraft() // 保存草稿
 }
+
+// 监听表单变化，自动保存草稿
+watch([title, content], () => {
+  saveDraft()
+}, { deep: true })
 
 const isListening = ref(false)
 const recognition = ref(null)
@@ -148,6 +189,7 @@ const handleSubmit = async () => {
     })
 
     if (response.data.success) {
+      clearDraft() // 发布成功后清除草稿
       showToast('發布成功！', 'success')
       router.push('/')
     }
