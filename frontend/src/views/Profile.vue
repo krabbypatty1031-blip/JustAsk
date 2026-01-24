@@ -14,6 +14,9 @@ const activeTab = ref('questions')
 const myQuestions = ref([])
 const myAnsweredQuestions = ref([])
 const isLoading = ref(true)
+const showDeleteConfirm = ref(false)
+const questionToDelete = ref(null)
+const isDeleting = ref(false)
 
 const fetchMyData = async () => {
   if (!currentUser.value) return
@@ -79,6 +82,33 @@ const handleLogout = async () => {
 
 const navigateToQuestion = (id) => {
   router.push(`/question/${id}`)
+}
+
+const confirmDelete = (question, event) => {
+  event.stopPropagation() // Prevent navigation
+  questionToDelete.value = question
+  showDeleteConfirm.value = true
+}
+
+const handleDeleteQuestion = async () => {
+  if (!questionToDelete.value) return
+  
+  isDeleting.value = true
+  try {
+    const response = await axios.delete(`/questions/${questionToDelete.value._id}`)
+    if (response.data.success) {
+      showToast('問題已成功刪除', 'success')
+      showDeleteConfirm.value = false
+      questionToDelete.value = null
+      // Refresh the list
+      await fetchMyData()
+    }
+  } catch (err) {
+    const msg = err.response?.data?.message || '刪除失敗，請稍後再試'
+    showToast(msg, 'error')
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 const getGreeting = () => {
@@ -190,7 +220,7 @@ const getGreeting = () => {
           </button>
         </div>
 
-        <transition-group name="list">
+<transition-group name="list">
           <article
             v-for="q in myQuestions"
             :key="q._id"
@@ -213,9 +243,13 @@ const getGreeting = () => {
                 </span>
               </div>
             </div>
-            <div class="neu-record-arrow">
-              <Icon name="chevron-right" :size="20" />
-            </div>
+            <button 
+              class="neu-delete-icon-btn" 
+              @click="confirmDelete(q, $event)"
+              aria-label="刪除問題"
+            >
+              <Icon name="trash" :size="18" />
+            </button>
           </article>
         </transition-group>
       </div>
@@ -261,13 +295,43 @@ const getGreeting = () => {
       </div>
     </section>
 
-    <!-- Logout Button -->
+<!-- Logout Button -->
     <div class="neu-logout-section">
       <button class="neu-logout-btn" @click="handleLogout">
         <Icon name="arrow-right-on-rectangle" :size="20" />
         退出登入
       </button>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <transition name="fade">
+      <div v-if="showDeleteConfirm" class="neu-confirm-mask" @click.self="showDeleteConfirm = false">
+        <div class="neu-confirm-dialog">
+          <div class="neu-confirm-icon">
+            <Icon name="exclamation-triangle" :size="32" />
+          </div>
+          <h3 class="neu-confirm-title">確定刪除此問題？</h3>
+          <p class="neu-confirm-text">刪除後將無法恢復，所有回答也會一併刪除。</p>
+          <div class="neu-confirm-actions">
+            <button 
+              class="neu-confirm-btn cancel" 
+              @click="showDeleteConfirm = false; questionToDelete = null"
+              :disabled="isDeleting"
+            >
+              取消
+            </button>
+            <button 
+              class="neu-confirm-btn delete" 
+              @click="handleDeleteQuestion"
+              :disabled="isDeleting"
+            >
+              <span v-if="isDeleting" class="neu-btn-spinner-sm"></span>
+              {{ isDeleting ? '刪除中...' : '確定刪除' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -637,6 +701,33 @@ const getGreeting = () => {
   color: var(--neu-primary);
 }
 
+.neu-delete-icon-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neu-text-light);
+  box-shadow: var(--neu-shadow-out-sm);
+  transition: all 0.2s ease;
+}
+
+.neu-delete-icon-btn:hover {
+  color: var(--neu-error);
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.05);
+}
+
+.neu-delete-icon-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--neu-shadow-in);
+}
+
 /* --- Empty & Loading States --- */
 .neu-empty-state {
   text-align: center;
@@ -784,6 +875,134 @@ const getGreeting = () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* --- Delete Confirmation Dialog --- */
+.neu-confirm-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.neu-confirm-dialog {
+  background: var(--neu-bg);
+  width: 100%;
+  max-width: 320px;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.neu-confirm-icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neu-error);
+}
+
+.neu-confirm-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--neu-text);
+  margin-bottom: 0.5rem;
+}
+
+.neu-confirm-text {
+  font-size: 0.9375rem;
+  color: var(--neu-text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.neu-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.neu-confirm-btn {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.neu-confirm-btn.cancel {
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-out-sm);
+}
+
+.neu-confirm-btn.cancel:hover {
+  color: var(--neu-text);
+  transform: translateY(-2px);
+  box-shadow: var(--neu-shadow-out);
+}
+
+.neu-confirm-btn.delete {
+  background: var(--neu-error);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.neu-confirm-btn.delete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.neu-confirm-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.neu-btn-spinner-sm {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* --- Fade Transition --- */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active .neu-confirm-dialog,
+.fade-leave-active .neu-confirm-dialog {
+  transition: transform 0.2s ease;
+}
+.fade-enter-from .neu-confirm-dialog,
+.fade-leave-to .neu-confirm-dialog {
+  transform: scale(0.9);
 }
 
 /* --- Responsive --- */

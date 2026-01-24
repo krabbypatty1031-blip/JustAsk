@@ -295,6 +295,38 @@ router.post('/:id/answers/:answerId/thank', requireLogin, async function(req, re
   }
 });
 
+// DELETE /questions/:id - Delete a question (only author can delete)
+router.delete('/:id', requireLogin, async function(req, res) {
+  let db;
+  try {
+    db = await connectToDB();
+    const questionId = new ObjectId(req.params.id);
+    const userId = req.user.id;
+
+    // Find the question first to check ownership
+    const question = await db.collection('Questions').findOne({ _id: questionId });
+    
+    if (!question) {
+      return res.status(404).json({ success: false, message: '找不到該問題' });
+    }
+
+    // Check if the current user is the author
+    if (question.author?.id !== userId) {
+      return res.status(403).json({ success: false, message: '您沒有權限刪除此問題' });
+    }
+
+    // Delete the question
+    await db.collection('Questions').deleteOne({ _id: questionId });
+
+    res.json({ success: true, message: '問題已成功刪除' });
+  } catch (err) {
+    console.error('Error in DELETE /questions/:id:', err);
+    res.status(500).json({ success: false, message: '刪除問題失敗' });
+  } finally {
+    if (db) await db.client.close();
+  }
+});
+
 // POST /questions/:id/answers - Add an answer
 router.post('/:id/answers', requireLogin, async function(req, res) {
   const { content } = req.body;
